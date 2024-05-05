@@ -1,6 +1,7 @@
 name: FastPluginConfigurer
 version: '${version}'
 main: kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer
+api-version: 1.13
 softdepend:
   - DeluxeMenus
   - ChestCommands
