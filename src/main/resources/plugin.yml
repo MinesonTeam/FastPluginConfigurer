@@ -1,0 +1,11 @@
+name: FastPluginConfigurer
+version: '${version}'
+main: kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer
+softdepend:
+  - DeluxeMenus
+  - ChestCommands
+commands:
+  fastpluginconfigurer:
+    aliases:
+      - fpc
+      - pluginconfigurer
