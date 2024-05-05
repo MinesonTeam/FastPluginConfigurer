@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.BlockIterator;
 
 @UtilityClass
-public class PlayerUtil {
+public class BlockUtil {
     public Block getBlockPlayerLookingAt(Player player, int distance) {
         BlockIterator iterator = new BlockIterator(player, distance);
         Block lastBlock = iterator.next();
