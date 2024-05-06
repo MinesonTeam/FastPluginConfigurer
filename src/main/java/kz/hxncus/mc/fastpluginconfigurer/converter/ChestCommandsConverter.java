@@ -1,9 +1,7 @@
-package kz.hxncus.mc.fastpluginconfigurer.inventory;
+package kz.hxncus.mc.fastpluginconfigurer.converter;
 
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
 import kz.hxncus.mc.fastpluginconfigurer.util.BlockUtil;
-import lombok.Getter;
-import lombok.Setter;
 import me.filoghost.chestcommands.api.Icon;
 import me.filoghost.chestcommands.inventory.Grid;
 import me.filoghost.chestcommands.menu.InternalMenu;
@@ -11,6 +9,7 @@ import me.filoghost.chestcommands.menu.MenuManager;
 import org.bukkit.Material;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -23,9 +22,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ChestCommandsConverter implements InventoryConverter {
-    @Setter
-    @Getter
-    private static boolean enabled = false;
     @Override
     public void fileToInventory(Player player, String fileName) {
         BlockState state = BlockUtil.getBlockPlayerLookingAt(player, 5).getState();
@@ -101,8 +97,10 @@ public class ChestCommandsConverter implements InventoryConverter {
         }
         try {
             config.save(file);
-        } catch (IOException e) {
-            e.printStackTrace();
+            config.load(file);
+        } catch (IOException | InvalidConfigurationException e) {
+            player.sendMessage("Error while trying to save the configuration");
+            return;
         }
         player.sendMessage("Chest inventory successfully saved into " + fileName);
     }

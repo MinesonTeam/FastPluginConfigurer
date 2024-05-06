@@ -1,4 +1,4 @@
-package kz.hxncus.mc.fastpluginconfigurer.inventory;
+package kz.hxncus.mc.fastpluginconfigurer.converter;
 
 import org.bukkit.entity.Player;
 
