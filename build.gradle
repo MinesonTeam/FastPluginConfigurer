@@ -19,7 +19,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly "org.spigotmc:spigot-api:1.12-R0.1-SNAPSHOT"
+    compileOnly "org.spigotmc:spigot-api:1.14-R0.1-SNAPSHOT"
     compileOnly(files('E:\\dev-server-1.16.5\\plugins\\DeluxeMenus-1.14.0-Release.jar'))
     compileOnly(files('E:\\dev-server-1.16.5\\plugins\\ChestCommands.jar'))
 
