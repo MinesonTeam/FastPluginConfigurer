@@ -1,12 +1,12 @@
-package kz.hxncus.mc.fastpluginconfigurer.converter;
+package kz.hxncus.mc.fastpluginconfigurer.hook;
 
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
-import kz.hxncus.mc.fastpluginconfigurer.util.BlockUtil;
 import me.filoghost.chestcommands.api.Icon;
 import me.filoghost.chestcommands.inventory.Grid;
 import me.filoghost.chestcommands.menu.InternalMenu;
 import me.filoghost.chestcommands.menu.MenuManager;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -21,10 +21,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class ChestCommandsConverter implements InventoryConverter {
+public class ChestCommandsHook implements Convertible {
     @Override
     public void fileToInventory(Player player, String fileName) {
-        BlockState state = BlockUtil.getBlockPlayerLookingAt(player, 5).getState();
+        Block targetBlock = player.getTargetBlockExact(5);
+        BlockState state = targetBlock == null ? null : targetBlock.getState();
         if (!(state instanceof Chest)) {
             player.sendMessage("You must be looking at a double chest to execute this command.");
             return;
@@ -57,7 +58,8 @@ public class ChestCommandsConverter implements InventoryConverter {
             return;
         }
         YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-        BlockState state = BlockUtil.getBlockPlayerLookingAt(player, 5).getState();
+        Block targetBlock = player.getTargetBlockExact(5);
+        BlockState state = targetBlock == null ? null : targetBlock.getState();
         if (!(state instanceof Chest)) {
             player.sendMessage("You must be looking at a double chest to execute this command.");
             return;
@@ -99,7 +101,7 @@ public class ChestCommandsConverter implements InventoryConverter {
             config.save(file);
             config.load(file);
         } catch (IOException | InvalidConfigurationException e) {
-            player.sendMessage("Error while trying to save the configuration");
+            e.printStackTrace();
             return;
         }
         player.sendMessage("Chest inventory successfully saved into " + fileName);

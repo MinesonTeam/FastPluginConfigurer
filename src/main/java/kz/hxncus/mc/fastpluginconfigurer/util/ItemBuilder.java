@@ -5,7 +5,6 @@ import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -16,13 +15,13 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class ItemBuilder {
-    private final ItemStack itemStack;
+    private final org.bukkit.inventory.ItemStack itemStack;
     private final ItemMeta itemMeta;
     public ItemBuilder(Material material) {
-        this(new ItemStack(material));
+        this(new org.bukkit.inventory.ItemStack(material));
     }
 
-    public ItemBuilder(@NonNull ItemStack item) {
+    public ItemBuilder(@NonNull org.bukkit.inventory.ItemStack item) {
         this.itemStack = item.clone();
         this.itemMeta = this.itemStack.getItemMeta();
     }
@@ -64,6 +63,7 @@ public class ItemBuilder {
                 return;
             }
             lore.addAll(lines);
+            meta.setLore(lore);
         });
     }
 
@@ -90,7 +90,7 @@ public class ItemBuilder {
         return edit(item -> item.setType(material));
     }
 
-    public ItemBuilder edit(Consumer<ItemStack> function) {
+    public ItemBuilder edit(Consumer<org.bukkit.inventory.ItemStack> function) {
         function.accept(this.itemStack);
         return this;
     }
@@ -163,8 +163,8 @@ public class ItemBuilder {
         });
     }
 
-    public ItemStack build() {
-        this.itemStack.setItemMeta(this.itemMeta);
-        return this.itemStack;
+    public org.bukkit.inventory.ItemStack build() {
+        itemStack.setItemMeta(itemMeta);
+        return itemStack;
     }
 }

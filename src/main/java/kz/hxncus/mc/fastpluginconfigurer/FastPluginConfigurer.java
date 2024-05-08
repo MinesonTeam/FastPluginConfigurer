@@ -1,8 +1,8 @@
 package kz.hxncus.mc.fastpluginconfigurer;
 
 import kz.hxncus.mc.fastpluginconfigurer.command.FastPluginConfigurerCommand;
-import kz.hxncus.mc.fastpluginconfigurer.converter.ChestCommandsConverter;
-import kz.hxncus.mc.fastpluginconfigurer.converter.DeluxeMenusConverter;
+import kz.hxncus.mc.fastpluginconfigurer.hook.ChestCommandsHook;
+import kz.hxncus.mc.fastpluginconfigurer.hook.DeluxeMenusHook;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.DupeFixer;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.InventoryManager;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.marker.InventoryItemMarker;
@@ -25,8 +25,10 @@ public final class FastPluginConfigurer extends JavaPlugin {
     private static FastPluginConfigurer instance;
     @Getter
     private static final Map<String, Plugin> plugins = new HashMap<>();
-    private DeluxeMenusConverter deluxeMenusConverter;
-    private ChestCommandsConverter chestCommandsConverter;
+    @Getter
+    private static final Logger LOGGER = Logger.getLogger("FastPluginConfigurer");
+    private DeluxeMenusHook deluxeMenusHook;
+    private ChestCommandsHook chestCommandsHook;
     private File converterDirectory;
     private final InventoryManager inventoryManager = new InventoryManager();
     private final InventoryItemMarker inventoryItemMarker = new InventoryItemMarker(this);
@@ -39,20 +41,16 @@ public final class FastPluginConfigurer extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        registerStaff();
-    }
-
-    @Override
-    public void onDisable() {
-        inventoryManager.closeAll();
-    }
-
-    private void registerStaff() {
         registerPlugins();
         registerConverters();
         registerCommands();
         registerDirectories();
         registerEvents(Bukkit.getPluginManager());
+    }
+
+    @Override
+    public void onDisable() {
+        inventoryManager.closeAll();
     }
 
     private void registerPlugins() {
@@ -64,12 +62,12 @@ public final class FastPluginConfigurer extends JavaPlugin {
 
     private void registerConverters() {
         if (plugins.containsKey("deluxemenus")) {
-            deluxeMenusConverter = new DeluxeMenusConverter();
-            Logger.getLogger("FastPluginConfigurer").info("DeluxeMenusConverter is enabled successfully");
+            deluxeMenusHook = new DeluxeMenusHook();
+            LOGGER.info("DeluxeMenusConverter is enabled successfully");
         }
         if (plugins.containsKey("chestcommands")) {
-            chestCommandsConverter = new ChestCommandsConverter();
-            Logger.getLogger("FastPluginConfigurer").info("ChestCommandsConverter is enabled successfully");
+            chestCommandsHook = new ChestCommandsHook();
+            LOGGER.info("ChestCommandsConverter is enabled successfully");
         }
     }
 

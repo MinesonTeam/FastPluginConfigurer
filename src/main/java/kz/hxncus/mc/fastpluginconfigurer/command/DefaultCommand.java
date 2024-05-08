@@ -6,6 +6,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public abstract class DefaultCommand implements Command {
@@ -29,7 +30,7 @@ public abstract class DefaultCommand implements Command {
     }
 
     private List<String> filter(List<String> list, String[] args) {
-        if (list == null) return null;
+        if (list == null) return Collections.emptyList();
         String last = args[args.length - 1];
         List<String> result = new ArrayList<>();
         for (String arg : list) {

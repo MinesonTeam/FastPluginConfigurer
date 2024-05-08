@@ -12,11 +12,8 @@ import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
-import java.util.logging.Logger;
-
 @Getter
 public class DupeFixer implements Listener {
-    private final Logger logger = Logger.getLogger("FastPluginConfigurer");
     private final FastPluginConfigurer plugin;
     private final InventoryItemMarker inventoryItemMarker;
     public DupeFixer(FastPluginConfigurer plugin) {
@@ -30,7 +27,7 @@ public class DupeFixer implements Listener {
                   PlayerInventory inventory = event.getPlayer().getInventory();
                   for (ItemStack itemStack : inventory) {
                       if (itemStack != null && inventoryItemMarker.isItemMarked(itemStack)) {
-                          logger.info("Player logged in with a Custom Inventory item in their inventory. Removing it.");
+                          plugin.getLogger().info("Player logged in with a Custom Inventory item in their inventory. Removing it.");
                           inventory.remove(itemStack);
                       }
                   }
@@ -41,7 +38,7 @@ public class DupeFixer implements Listener {
     public void onEntityPickupItemEvent(EntityPickupItemEvent event) {
         Item item = event.getItem();
         if (inventoryItemMarker.isItemMarked(item.getItemStack())) {
-            logger.info("Someone picked up a Custom Inventory item. Removing it.");
+            plugin.getLogger().info("Someone picked up a Custom Inventory item. Removing it.");
             event.setCancelled(true);
             item.remove();
         }
@@ -51,7 +48,7 @@ public class DupeFixer implements Listener {
     public void onEntityDropItemEvent(EntityDropItemEvent event) {
         Item item = event.getItemDrop();
         if (inventoryItemMarker.isItemMarked(item.getItemStack())) {
-            logger.info("Someone dropped a Custom Inventory item. Removing it.");
+            plugin.getLogger().info("Someone dropped a Custom Inventory item. Removing it.");
             event.setCancelled(true);
             item.remove();
         }

@@ -19,7 +19,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 @Getter
-public class UsualFastInventory implements FastInventory {
+public class BasicFastInventory implements FastInventory {
     private final FastPluginConfigurer instance = FastPluginConfigurer.getInstance();
     private final Inventory inventory;
     private final Map<Integer, Consumer<InventoryClickEvent>> itemClickHandlers = new HashMap<>();
@@ -31,23 +31,23 @@ public class UsualFastInventory implements FastInventory {
     @Setter
     private boolean marking = true;
 
-    public UsualFastInventory(InventoryType type) {
+    public BasicFastInventory(InventoryType type) {
         this(Bukkit.createInventory(null, type));
     }
 
-    public UsualFastInventory(InventoryType type, String title) {
+    public BasicFastInventory(InventoryType type, String title) {
         this(Bukkit.createInventory(null, type, title));
     }
 
-    public UsualFastInventory(int size) {
+    public BasicFastInventory(int size) {
         this(Bukkit.createInventory(null, size));
     }
 
-    public UsualFastInventory(int size, String title) {
+    public BasicFastInventory(int size, String title) {
         this(Bukkit.createInventory(null, size, title));
     }
 
-    public UsualFastInventory(@NonNull Inventory inventory) {
+    public BasicFastInventory(@NonNull Inventory inventory) {
         this.inventory = inventory;
         registerInventory();
         Bukkit.getScheduler().runTaskLater(instance, this::onInitialize, 1L);
@@ -86,16 +86,16 @@ public class UsualFastInventory implements FastInventory {
     }
 
     @NonNull
-    public UsualFastInventory addItem(ItemStack item) {
+    public int addItem(ItemStack item) {
         int slot = this.inventory.firstEmpty();
         if (slot != -1) {
             return setItem(slot, item);
         }
-        return this;
+        return slot;
     }
 
     @NonNull
-    public UsualFastInventory addItem(ItemStack item, Consumer<InventoryClickEvent> handler) {
+    public int addItem(ItemStack item, Consumer<InventoryClickEvent> handler) {
         setItemClickHandler(inventory.firstEmpty(), handler);
         return addItem(item);
     }
@@ -132,21 +132,13 @@ public class UsualFastInventory implements FastInventory {
     }
 
     @NonNull
-    public UsualFastInventory setItemIf(int slot, ItemStack item, Predicate<UsualFastInventory> predicate) {
-        if (predicate.test(this)) {
-            return setItem(slot, item);
-        }
-        return this;
-    }
-
-    @NonNull
-    public UsualFastInventory setItem(int slot, ItemStack item) {
+    public int setItem(int slot, ItemStack item) {
         this.inventory.setItem(slot, marking ? instance.getInventoryItemMarker().markItem(item) : item);
-        return this;
+        return slot;
     }
 
     @NonNull
-    public UsualFastInventory setItem(int slot, ItemStack item, Consumer<InventoryClickEvent> handler) {
+    public int setItem(int slot, ItemStack item, Consumer<InventoryClickEvent> handler) {
         setItemClickHandler(slot, handler);
         return setItem(slot, item);
     }
@@ -161,24 +153,24 @@ public class UsualFastInventory implements FastInventory {
     }
 
     @NonNull
-    public UsualFastInventory setItems(int slotFrom, int slotTo, ItemStack item) {
+    public BasicFastInventory setItems(int slotFrom, int slotTo, ItemStack item) {
         return setItems(slotFrom, slotTo, item, null);
     }
 
     @NonNull
-    public UsualFastInventory setItems(int slotFrom, int slotTo, ItemStack item, Consumer<InventoryClickEvent> handler) {
+    public BasicFastInventory setItems(int slotFrom, int slotTo, ItemStack item, Consumer<InventoryClickEvent> handler) {
         for (int i = slotFrom; i <= slotTo; i++) {
             setItem(i, item, handler);
         }
         return this;
     }
     @NonNull
-    public UsualFastInventory setItems(ItemStack item, int @NonNull ... slots) {
+    public BasicFastInventory setItems(ItemStack item, int @NonNull ... slots) {
         return setItems(item, null, slots);
     }
 
     @NonNull
-    public UsualFastInventory setItems(ItemStack item, Consumer<InventoryClickEvent> handler, int @NonNull ... slots) {
+    public BasicFastInventory setItems(ItemStack item, Consumer<InventoryClickEvent> handler, int @NonNull ... slots) {
         for (int slot : slots) {
             setItem(slot, item, handler);
         }
@@ -186,7 +178,7 @@ public class UsualFastInventory implements FastInventory {
     }
 
     @NonNull
-    public UsualFastInventory removeItems(int @NonNull ... slots) {
+    public BasicFastInventory removeItems(int @NonNull ... slots) {
         for (int slot : slots) {
             removeItem(slot);
         }
@@ -194,7 +186,7 @@ public class UsualFastInventory implements FastInventory {
     }
 
     @NonNull
-    public UsualFastInventory removeItems(int slotFrom, int slotTo) {
+    public BasicFastInventory removeItems(int slotFrom, int slotTo) {
         for (int i = slotFrom; i <= slotTo; i++) {
             removeItem(i);
         }
@@ -202,44 +194,44 @@ public class UsualFastInventory implements FastInventory {
     }
 
     @NonNull
-    public UsualFastInventory removeItem(int slot) {
+    public BasicFastInventory removeItem(int slot) {
         this.inventory.clear(slot);
         this.itemClickHandlers.remove(slot);
         return this;
     }
 
     @NonNull
-    public UsualFastInventory clear() {
+    public BasicFastInventory clear() {
         this.inventory.clear();
         return this;
     }
 
     @NonNull
-    public UsualFastInventory setCloseFilter(Predicate<Player> closeFilter) {
+    public BasicFastInventory setCloseFilter(Predicate<Player> closeFilter) {
         this.closeFilter = closeFilter;
         return this;
     }
 
     @Override
-    public UsualFastInventory addDragHandler(Consumer<InventoryDragEvent> dragHandler) {
+    public BasicFastInventory addDragHandler(Consumer<InventoryDragEvent> dragHandler) {
         dragHandlers.add(dragHandler);
         return this;
     }
 
     @NonNull
-    public UsualFastInventory addOpenHandler(Consumer<InventoryOpenEvent> openHandler) {
+    public BasicFastInventory addOpenHandler(Consumer<InventoryOpenEvent> openHandler) {
         openHandlers.add(openHandler);
         return this;
     }
 
     @NonNull
-    public UsualFastInventory addCloseHandler(Consumer<InventoryCloseEvent> closeHandler) {
+    public BasicFastInventory addCloseHandler(Consumer<InventoryCloseEvent> closeHandler) {
         closeHandlers.add(closeHandler);
         return this;
     }
 
     @NonNull
-    public UsualFastInventory addClickHandler(Consumer<InventoryClickEvent> clickHandler) {
+    public BasicFastInventory addClickHandler(Consumer<InventoryClickEvent> clickHandler) {
         clickHandlers.add(clickHandler);
         return this;
     }
