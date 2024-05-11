@@ -10,8 +10,11 @@ import java.util.Collections;
 import java.util.List;
 
 public abstract class DefaultCommand implements Command {
-    protected DefaultCommand(String command) {
-        PluginCommand pluginCommand = FastPluginConfigurer.getInstance().getCommand(command);
+    public final FastPluginConfigurer plugin;
+
+    protected DefaultCommand(FastPluginConfigurer plugin, String command) {
+        this.plugin = plugin;
+        PluginCommand pluginCommand = plugin.getCommand(command);
         if (pluginCommand != null) {
             pluginCommand.setExecutor(this);
             pluginCommand.setTabCompleter(this);
@@ -20,13 +23,13 @@ public abstract class DefaultCommand implements Command {
 
     @Override
     public boolean onCommand(@NonNull CommandSender sender, @NonNull org.bukkit.command.Command command, @NonNull String label, @NonNull String[] args) {
-        execute(sender, label, args);
+        execute(sender, command, label, args);
         return true;
     }
 
     @Override
     public List<String> onTabComplete(@NonNull CommandSender sender, @NonNull org.bukkit.command.Command command, @NonNull String alias, @NonNull String[] args) {
-        return filter(complete(sender, args), args);
+        return filter(complete(sender, command, args), args);
     }
 
     private List<String> filter(List<String> list, String[] args) {

@@ -12,8 +12,19 @@ import org.bukkit.inventory.Inventory;
 import java.util.HashMap;
 import java.util.Map;
 
-public class InventoryManager implements Listener {
+public final class InventoryManager implements Listener {
     private final Map<Inventory, FastInventory> inventories = new HashMap<>();
+    private static InventoryManager manager;
+
+    private InventoryManager() {
+    }
+
+    public static InventoryManager getInstance() {
+        if (manager == null) {
+            manager = new InventoryManager();
+        }
+        return manager;
+    }
 
     public void register(Inventory inventory, FastInventory handler) {
         inventories.put(inventory, handler);

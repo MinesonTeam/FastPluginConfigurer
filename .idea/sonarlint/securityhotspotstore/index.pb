@@ -1,8 +1,6 @@
 
 <
 build.gradle,f\0\f07866736216be0ee2aba49e392191aeae700a35
-v
-Fsrc/main/java/kz/hxncus/mc/fastpluginconfigurer/plugin/FastPlugin.java,0\b\0b1351eaa3fb6e3161d8b4f555de30fb17315b92
 à
 Xsrc/main/java/kz/hxncus/mc/fastpluginconfigurer/command/FastPluginConfigurerCommand.java,f\f\ffe84c38a195d8ec3e7fe01e3f890e9ebe41e0dd
 y
@@ -27,21 +25,18 @@ o
 Ksrc/main/java/kz/hxncus/mc/fastpluginconfigurer/command/DefaultCommand.java,d\9\d95b7cb2afed4386aebda30da5b48dd949d17fb6
 t
 Dsrc/main/java/kz/hxncus/mc/fastpluginconfigurer/command/Command.java,9\0\9085838b2b5c546df7810e490101747797d43dae
-r
-Bsrc/main/java/kz/hxncus/mc/fastpluginconfigurer/util/FileUtil.java,1\c\1c84aa806facffcef23a5b577e442cb566207a5d
 y
 Isrc/main/java/kz/hxncus/mc/fastpluginconfigurer/hook/DeluxeMenusHook.java,5\2\5229672e97dcbea42e1123a0a894da1175fbb5ab
-t
-Dsrc/main/java/kz/hxncus/mc/fastpluginconfigurer/hook/PluginHook.java,d\3\d35c628a5e7eacd5188075de72d3dfd7355d4ab9
 {
 Ksrc/main/java/kz/hxncus/mc/fastpluginconfigurer/hook/ChestCommandsHook.java,e\e\ee71ae0399395de409889e28707a82a9dcbb2630
 n
 >src/main/java/kz/hxncus/mc/fastpluginconfigurer/Constants.java,6\3\637d154bff8124acb3d37ef5ce1bf3ddddc3e5bb
 u
-Esrc/main/java/kz/hxncus/mc/fastpluginconfigurer/hook/Convertable.java,f\c\fc3866a3de84ffbc09eecef14886957f2fa3a5a2
-u
 Esrc/main/java/kz/hxncus/mc/fastpluginconfigurer/hook/Convertible.java,1\7\170e847eaa3a29f3a9bf4b625d4557712f6480b4
-s
-Csrc/main/java/kz/hxncus/mc/fastpluginconfigurer/util/ItemStack.java,7\f\7f41b1d65e3715a26a5cb150de013617fce97d30
 Å
 Qsrc/main/java/kz/hxncus/mc/fastpluginconfigurer/inventory/BasicFastInventory.java,3\f\3fad73c81aff55a3b300ac5bfe9234b8e0a16588
+:
+
+.gitignore,a\5\a5cc2925ca8258af241be7e5b0381edf30266302
+o
+?src/main/java/kz/hxncus/mc/fastpluginconfigurer/FastPlugin.java,4\1\411e38d604d302698d9a0980706175a3883cf2a6

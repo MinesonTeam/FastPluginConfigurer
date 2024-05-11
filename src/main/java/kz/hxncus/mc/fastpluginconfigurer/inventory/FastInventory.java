@@ -1,7 +1,6 @@
 package kz.hxncus.mc.fastpluginconfigurer.inventory;
 
 import org.bukkit.entity.HumanEntity;
-import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -27,12 +26,10 @@ public interface FastInventory {
     void registerInventory();
     void unregisterInventory();
     void open(HumanEntity entity);
-    void open(Player player);
     int addItem(ItemStack item);
     int addItem(ItemStack item, Consumer<InventoryClickEvent> handler);
     int setItem(int slot, ItemStack item);
     int setItem(int slot, ItemStack item, Consumer<InventoryClickEvent> handler);
-    void setMarking(boolean mark);
     int firstEmpty();
     ItemStack getItem(int slot);
 }

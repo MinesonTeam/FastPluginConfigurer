@@ -1,4 +1,4 @@
-package kz.hxncus.mc.fastpluginconfigurer.plugin;
+package kz.hxncus.mc.fastpluginconfigurer;
 
 import org.bukkit.plugin.java.JavaPlugin;
 

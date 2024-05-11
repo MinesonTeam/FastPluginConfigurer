@@ -8,7 +8,7 @@ import java.io.File;
 import java.io.IOException;
 
 @UtilityClass
-public class FileUtil {
+public class FileUtils {
     public boolean reload(FileConfiguration config, File file) {
         try {
             config.save(file);

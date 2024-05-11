@@ -3,6 +3,7 @@ package kz.hxncus.mc.fastpluginconfigurer.inventory;
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.marker.InventoryItemMarker;
 import lombok.Getter;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Item;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -23,24 +24,25 @@ public class DupeFixer implements Listener {
 
     @EventHandler
     public void onPlayerLogin(PlayerLoginEvent event) {
-        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-                  PlayerInventory inventory = event.getPlayer().getInventory();
-                  for (ItemStack itemStack : inventory) {
-                      if (itemStack != null && inventoryItemMarker.isItemMarked(itemStack)) {
-                          plugin.getLogger().info("Player logged in with a Custom Inventory item in their inventory. Removing it.");
-                          inventory.remove(itemStack);
-                      }
-                  }
-              }, 10L);
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            PlayerInventory inventory = event.getPlayer().getInventory();
+            for (ItemStack itemStack : inventory) {
+                if (itemStack == null || inventoryItemMarker.isItemMarked(itemStack)) {
+                    continue;
+                }
+                inventory.remove(itemStack);
+                plugin.getLogger().info("Player logged in with a Custom Inventory item in their inventory. Removing it.");
+            }
+        }, 10L);
     }
 
     @EventHandler
     public void onEntityPickupItemEvent(EntityPickupItemEvent event) {
         Item item = event.getItem();
         if (inventoryItemMarker.isItemMarked(item.getItemStack())) {
-            plugin.getLogger().info("Someone picked up a Custom Inventory item. Removing it.");
-            event.setCancelled(true);
             item.remove();
+            event.setCancelled(true);
+            plugin.getLogger().info("Someone picked up a Custom Inventory item. Removing it.");
         }
     }
 

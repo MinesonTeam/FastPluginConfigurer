@@ -20,7 +20,7 @@ import java.util.function.Predicate;
 
 @Getter
 public class BasicFastInventory implements FastInventory {
-    private final FastPluginConfigurer instance = FastPluginConfigurer.getInstance();
+    private final FastPluginConfigurer plugin;
     private final Inventory inventory;
     private final Map<Integer, Consumer<InventoryClickEvent>> itemClickHandlers = new HashMap<>();
     private final List<Consumer<InventoryDragEvent>> dragHandlers = new ArrayList<>();
@@ -31,54 +31,35 @@ public class BasicFastInventory implements FastInventory {
     @Setter
     private boolean marking = true;
 
-    public BasicFastInventory(InventoryType type) {
-        this(Bukkit.createInventory(null, type));
+    public BasicFastInventory(FastPluginConfigurer plugin, InventoryType type) {
+        this(plugin, Bukkit.createInventory(null, type));
     }
 
-    public BasicFastInventory(InventoryType type, String title) {
-        this(Bukkit.createInventory(null, type, title));
+    public BasicFastInventory(FastPluginConfigurer plugin, InventoryType type, String title) {
+        this(plugin, Bukkit.createInventory(null, type, title));
     }
 
-    public BasicFastInventory(int size) {
-        this(Bukkit.createInventory(null, size));
+    public BasicFastInventory(FastPluginConfigurer plugin, int size) {
+        this(plugin, Bukkit.createInventory(null, size));
     }
 
-    public BasicFastInventory(int size, String title) {
-        this(Bukkit.createInventory(null, size, title));
+    public BasicFastInventory(FastPluginConfigurer plugin, int size, String title) {
+        this(plugin, Bukkit.createInventory(null, size, title));
     }
 
-    public BasicFastInventory(@NonNull Inventory inventory) {
+    public BasicFastInventory(FastPluginConfigurer plugin, @NonNull Inventory inventory) {
+        this.plugin = plugin;
         this.inventory = inventory;
         registerInventory();
-        Bukkit.getScheduler().runTaskLater(instance, this::onInitialize, 1L);
+        Bukkit.getScheduler().runTaskLater(plugin, this::onInitialize, 1L);
     }
 
     public void registerInventory() {
-        instance.getInventoryManager().register(inventory, this);
+        InventoryManager.getInstance().register(inventory, this);
     }
 
     public void unregisterInventory() {
-        instance.getInventoryManager().unregister(inventory);
-    }
-
-    @Override
-    public void onInitialize() {
-    }
-
-    @Override
-    public void onDrag(InventoryDragEvent event) {
-    }
-
-    @Override
-    public void onClick(InventoryClickEvent event) {
-    }
-
-    @Override
-    public void onClose(InventoryCloseEvent event) {
-    }
-
-    @Override
-    public void onOpen(InventoryOpenEvent event) {
+        InventoryManager.getInstance().unregister(inventory);
     }
 
     public int firstEmpty() {
@@ -113,12 +94,12 @@ public class BasicFastInventory implements FastInventory {
     }
 
     public ItemStack @NonNull [] getItems(int slotFrom, int slotTo) {
-        if (slotFrom == slotTo || slotFrom > slotTo) {
+        if (slotFrom >= slotTo) {
             throw new IllegalArgumentException("slotFrom must be less than slotTo");
         }
         ItemStack[] items = new ItemStack[slotTo - slotFrom + 1]; // 20
         for (int i = slotFrom ; i <= slotTo; i++) { // 0; i <= 20
-            items[i - slotFrom] = this.inventory.getItem(i);
+            items[i - slotFrom] = getItem(i);
         }
         return items;
     }
@@ -133,14 +114,8 @@ public class BasicFastInventory implements FastInventory {
 
     @NonNull
     public int setItem(int slot, ItemStack item) {
-        this.inventory.setItem(slot, marking ? instance.getInventoryItemMarker().markItem(item) : item);
+        this.inventory.setItem(slot, marking ? plugin.getInventoryItemMarker().markItem(item) : item);
         return slot;
-    }
-
-    @NonNull
-    public int setItem(int slot, ItemStack item, Consumer<InventoryClickEvent> handler) {
-        setItemClickHandler(slot, handler);
-        return setItem(slot, item);
     }
 
     @NonNull
@@ -164,6 +139,7 @@ public class BasicFastInventory implements FastInventory {
         }
         return this;
     }
+
     @NonNull
     public BasicFastInventory setItems(ItemStack item, int @NonNull ... slots) {
         return setItems(item, null, slots);
@@ -175,6 +151,12 @@ public class BasicFastInventory implements FastInventory {
             setItem(slot, item, handler);
         }
         return this;
+    }
+
+    @NonNull
+    public int setItem(int slot, ItemStack item, Consumer<InventoryClickEvent> handler) {
+        setItemClickHandler(slot, handler);
+        return setItem(slot, item);
     }
 
     @NonNull
@@ -240,13 +222,34 @@ public class BasicFastInventory implements FastInventory {
         entity.openInventory(inventory);
     }
 
-    public void open(Player player) {
-        player.openInventory(inventory);
-    }
-
     @NonNull
     public Inventory getInventory() {
         return this.inventory;
+    }
+
+    @Override
+    public void onInitialize() {
+        // Basic inventory initialization
+    }
+
+    @Override
+    public void onDrag(InventoryDragEvent event) {
+        // Basic inventory drag
+    }
+
+    @Override
+    public void onClick(InventoryClickEvent event) {
+        // Basic inventory click
+    }
+
+    @Override
+    public void onClose(InventoryCloseEvent event) {
+        // Basic inventory close
+    }
+
+    @Override
+    public void onOpen(InventoryOpenEvent event) {
+        // Basic inventory open
     }
 
     public void handleDrag(InventoryDragEvent event) {

@@ -2,8 +2,7 @@ package kz.hxncus.mc.fastpluginconfigurer.listener;
 
 import kz.hxncus.mc.fastpluginconfigurer.FastPlayer;
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
-import kz.hxncus.mc.fastpluginconfigurer.command.FastPluginConfigurerCommand;
-import kz.hxncus.mc.fastpluginconfigurer.util.FileUtil;
+import kz.hxncus.mc.fastpluginconfigurer.util.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.bukkit.Bukkit;
@@ -22,10 +21,16 @@ import java.util.Map;
 
 
 public class PlayerListener implements Listener {
+    private final FastPluginConfigurer plugin;
+
+    public PlayerListener(FastPluginConfigurer plugin) {
+        this.plugin = plugin;
+    }
+
     @EventHandler
     public void onPlayerWriteConfigValue(AsyncPlayerChatEvent event) {
         Player player = event.getPlayer();
-        FastPlayer fastPlayer = FastPlayer.getFastPlayer(player.getUniqueId());
+        FastPlayer fastPlayer = FastPluginConfigurer.getFastPlayer(player.getUniqueId());
         String message = event.getMessage();
         if (!fastPlayer.isChatSetKey()) {
             return;
@@ -34,7 +39,7 @@ public class PlayerListener implements Listener {
             resetChatSetting(fastPlayer, player);
         }
         String path = fastPlayer.getPath();
-        if (StringUtils.isEmpty(path)) {
+        if (path == null) {
             player.sendMessage("Invalid path.");
             return;
         }
@@ -55,34 +60,34 @@ public class PlayerListener implements Listener {
         }
         YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
         config.set(path, convert(message));
-        FileUtil.reload(config, file);
+        FileUtils.reload(config, file);
 
         resetChatSetting(fastPlayer, player);
         event.setCancelled(true);
     }
 
-    private static void resetChatSetting(FastPlayer fastPlayer, Player player) {
+    private void resetChatSetting(FastPlayer fastPlayer, Player player) {
         fastPlayer.setChatSetKey(false);
         fastPlayer.getChatTask().cancel();
 
         String pluginName = fastPlayer.getLastPluginName();
         if (pluginName != null) {
-            Bukkit.getScheduler().runTask(FastPluginConfigurer.getInstance(),
-                    () -> FastPluginConfigurerCommand.configSubCommand(player, pluginName));
+            Bukkit.getScheduler().runTask(plugin,
+                    () -> Bukkit.dispatchCommand(player, "fpc config " + pluginName));
         }
     }
 
     @EventHandler
     public void onPlayerWriteConfigKey(AsyncPlayerChatEvent event) {
         Player player = event.getPlayer();
-        FastPlayer fastPlayer = FastPlayer.getFastPlayer(player.getUniqueId());
+        FastPlayer fastPlayer = FastPluginConfigurer.getFastPlayer(player.getUniqueId());
         String message = event.getMessage();
         if (!fastPlayer.isChatAddKey() || message.equalsIgnoreCase("cancel")) {
             fastPlayer.setChatAddKey(false);
             return;
         }
         String path = fastPlayer.getPath();
-        if (StringUtils.isEmpty(path)) {
+        if (path == null) {
             player.sendMessage("Invalid path.");
             return;
         }
@@ -102,16 +107,17 @@ public class PlayerListener implements Listener {
             }
         }
         YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-        config.set(path + "." + event.getMessage(), "");
-        FileUtil.reload(config, file);
+        String fullPath = path.isEmpty() ? event.getMessage() : path + "." + event.getMessage();
+        config.set(fullPath, "");
+        FileUtils.reload(config, file);
 
         fastPlayer.setChatAddKey(false);
         fastPlayer.getChatTask().cancel();
 
         String pluginName = fastPlayer.getLastPluginName();
         if (pluginName != null) {
-            Bukkit.getScheduler().runTask(FastPluginConfigurer.getInstance(),
-                    () -> FastPluginConfigurerCommand.configSubCommand(player, pluginName));
+            Bukkit.getScheduler().runTask(plugin,
+                    () -> Bukkit.dispatchCommand(player, "fpc config " + pluginName));
         }
         event.setCancelled(true);
     }
@@ -120,10 +126,9 @@ public class PlayerListener implements Listener {
         if (message.equals("null")) {
             return null;
         }
-        String[] split = message.substring(1, message.length() - 1).split(", ");
         if (message.startsWith("{") && message.endsWith("}")) {
             Map<String, Object> objectMap = new HashMap<>();
-            for (String messages : split) {
+            for (String messages : message.substring(1, message.length() - 1).split(", ")) {
                 String[] splitted = messages.split(":");
                 objectMap.put(splitted[0], convert(splitted[1]));
             }
@@ -131,7 +136,7 @@ public class PlayerListener implements Listener {
         }
         if (message.startsWith("[") && message.endsWith("]")) {
             ArrayList<Object> objects = new ArrayList<>();
-            for (String messages : split) {
+            for (String messages : message.substring(1, message.length() - 1).split(", ")) {
                 objects.add(convert(messages));
             }
             return objects;
@@ -153,6 +158,6 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        FastPlayer.removePlayer(event.getPlayer().getUniqueId());
+        FastPluginConfigurer.removePlayer(event.getPlayer().getUniqueId());
     }
 }
