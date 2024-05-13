@@ -1,4 +1,5 @@
 # README
+
 ## About
 
 FastPluginConfigurer is a ultimate plugin that speeds up plugin customization.
