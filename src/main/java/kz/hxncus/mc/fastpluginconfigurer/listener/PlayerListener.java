@@ -1,9 +1,8 @@
 package kz.hxncus.mc.fastpluginconfigurer.listener;
 
-import kz.hxncus.mc.fastpluginconfigurer.FastPlayer;
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
+import kz.hxncus.mc.fastpluginconfigurer.fast.FastPlayer;
 import kz.hxncus.mc.fastpluginconfigurer.util.FileUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -35,46 +34,44 @@ public class PlayerListener implements Listener {
         if (!fastPlayer.isChatSetKey()) {
             return;
         }
-        if (message.equalsIgnoreCase("cancel")) {
-            resetChatSetting(fastPlayer, player);
-        }
-        String path = fastPlayer.getPath();
-        if (path == null) {
-            player.sendMessage("Invalid path.");
-            return;
-        }
-        String dataFolderPath = fastPlayer.getDataFolderPath();
-        if (StringUtils.isEmpty(dataFolderPath)) {
-            player.sendMessage("Invalid dataFolderPath.");
-            return;
-        }
-        File file = new File(dataFolderPath + "/config.yml");
+        File file = fastPlayer.getFile();
         if (!file.exists()) {
             try {
-                new File(dataFolderPath).mkdirs();
+                new File(file.getParentFile().getPath()).mkdirs();
                 file.createNewFile();
             } catch (IOException e) {
                 e.printStackTrace();
                 return;
             }
         }
+        if (message.equalsIgnoreCase("cancel")) {
+            resetChatSetting(fastPlayer);
+            openLastOpenInventory(fastPlayer, player, file);
+        }
+        String path = fastPlayer.getPath();
+        if (path == null) {
+            player.sendMessage("Invalid path.");
+            return;
+        }
         YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
         config.set(path, convert(message));
         FileUtils.reload(config, file);
-
-        resetChatSetting(fastPlayer, player);
+        resetChatSetting(fastPlayer);
+        openLastOpenInventory(fastPlayer, player, file);
         event.setCancelled(true);
     }
 
-    private void resetChatSetting(FastPlayer fastPlayer, Player player) {
-        fastPlayer.setChatSetKey(false);
-        fastPlayer.getChatTask().cancel();
-
+    private void openLastOpenInventory(FastPlayer fastPlayer, Player player, File file) {
         String pluginName = fastPlayer.getLastPluginName();
         if (pluginName != null) {
             Bukkit.getScheduler().runTask(plugin,
-                    () -> Bukkit.dispatchCommand(player, "fpc config " + pluginName));
+                    () -> Bukkit.dispatchCommand(player, String.format("fpc config %s %s", pluginName, file.getName())));
         }
+    }
+
+    private void resetChatSetting(FastPlayer fastPlayer) {
+        fastPlayer.setChatSetKey(false);
+        fastPlayer.getChatTask().cancel();
     }
 
     @EventHandler
@@ -82,43 +79,33 @@ public class PlayerListener implements Listener {
         Player player = event.getPlayer();
         FastPlayer fastPlayer = FastPluginConfigurer.getFastPlayer(player.getUniqueId());
         String message = event.getMessage();
-        if (!fastPlayer.isChatAddKey() || message.equalsIgnoreCase("cancel")) {
-            fastPlayer.setChatAddKey(false);
+        if (!fastPlayer.isChatAddKey()) {
             return;
         }
-        String path = fastPlayer.getPath();
-        if (path == null) {
-            player.sendMessage("Invalid path.");
-            return;
-        }
-        String dataFolderPath = fastPlayer.getDataFolderPath();
-        if (StringUtils.isEmpty(dataFolderPath)) {
-            player.sendMessage("Invalid dataFolderPath.");
-            return;
-        }
-        File file = new File(dataFolderPath + "/config.yml");
+        File file = fastPlayer.getFile();
         if (!file.exists()) {
             try {
-                new File(dataFolderPath).mkdirs();
+                new File(file.getParentFile().getPath()).mkdirs();
                 file.createNewFile();
             } catch (IOException e) {
                 e.printStackTrace();
                 return;
             }
         }
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-        String fullPath = path.isEmpty() ? event.getMessage() : path + "." + event.getMessage();
-        config.set(fullPath, "");
-        FileUtils.reload(config, file);
-
-        fastPlayer.setChatAddKey(false);
-        fastPlayer.getChatTask().cancel();
-
-        String pluginName = fastPlayer.getLastPluginName();
-        if (pluginName != null) {
-            Bukkit.getScheduler().runTask(plugin,
-                    () -> Bukkit.dispatchCommand(player, "fpc config " + pluginName));
+        if (message.equalsIgnoreCase("cancel")) {
+            resetChatSetting(fastPlayer);
+            openLastOpenInventory(fastPlayer, player, file);
         }
+        String path = fastPlayer.getPath();
+        if (path == null) {
+            player.sendMessage("Invalid path.");
+            return;
+        }
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+        config.set(path.isEmpty() ? message : path + "." + message, "");
+        FileUtils.reload(config, file);
+        resetChatSetting(fastPlayer);
+        openLastOpenInventory(fastPlayer, player, file);
         event.setCancelled(true);
     }
 
@@ -128,7 +115,8 @@ public class PlayerListener implements Listener {
         }
         if (message.startsWith("{") && message.endsWith("}")) {
             Map<String, Object> objectMap = new HashMap<>();
-            for (String messages : message.substring(1, message.length() - 1).split(", ")) {
+            String[] split = message.substring(1, message.length() - 1).split("(?<=^|,)\\s*(?:\\{([^:]+):([^,\\]]+)}|([^:]+):\\[([^]]+)])");
+            for (String messages : split) {
                 String[] splitted = messages.split(":");
                 objectMap.put(splitted[0], convert(splitted[1]));
             }

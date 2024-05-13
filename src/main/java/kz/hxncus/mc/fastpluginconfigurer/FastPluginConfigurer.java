@@ -1,8 +1,11 @@
 package kz.hxncus.mc.fastpluginconfigurer;
 
 import kz.hxncus.mc.fastpluginconfigurer.command.FastPluginConfigurerCommand;
+import kz.hxncus.mc.fastpluginconfigurer.fast.FastPlayer;
+import kz.hxncus.mc.fastpluginconfigurer.hook.BetterGUIHook;
 import kz.hxncus.mc.fastpluginconfigurer.hook.ChestCommandsHook;
 import kz.hxncus.mc.fastpluginconfigurer.hook.DeluxeMenusHook;
+import kz.hxncus.mc.fastpluginconfigurer.hook.ZMenuHook;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.DupeFixer;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.InventoryManager;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.marker.InventoryItemMarker;
@@ -20,9 +23,13 @@ import java.util.logging.Logger;
 
 @Getter
 public final class FastPluginConfigurer extends JavaPlugin {
+    @Getter
+    private static FastPluginConfigurer instance;
     private final Logger LOGGER = Logger.getLogger("FastPluginConfigurer");
     private DeluxeMenusHook deluxeMenusHook;
     private ChestCommandsHook chestCommandsHook;
+    private BetterGUIHook betterguiHook;
+    private ZMenuHook zMenuHook;
     private File converterDirectory;
     private final InventoryItemMarker inventoryItemMarker = new InventoryItemMarker(this);
     private final PluginManager pluginManager = Bukkit.getPluginManager();
@@ -33,6 +40,11 @@ public final class FastPluginConfigurer extends JavaPlugin {
     }
     public static FastPlayer removePlayer(UUID uuid) {
         return FAST_PLAYER_MAP.remove(uuid);
+    }
+
+    @Override
+    public void onLoad() {
+        instance = this;
     }
 
     @Override
@@ -56,6 +68,14 @@ public final class FastPluginConfigurer extends JavaPlugin {
         if (pluginManager.getPlugin("chestcommands") != null) {
             chestCommandsHook = new ChestCommandsHook(this);
             LOGGER.info("Hook ChestCommands is enabled successfully.");
+        }
+        if (pluginManager.getPlugin("bettergui") != null) {
+            betterguiHook = new BetterGUIHook(this);
+            LOGGER.info("Hook BetterGUI is enabled successfully.");
+        }
+        if (pluginManager.getPlugin("zmenu") != null) {
+            zMenuHook = new ZMenuHook(this);
+            LOGGER.info("Hook zMenu is enabled successfully.");
         }
     }
 

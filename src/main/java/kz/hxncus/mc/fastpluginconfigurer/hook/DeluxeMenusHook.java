@@ -4,6 +4,7 @@ import com.extendedclip.deluxemenus.menu.Menu;
 import com.extendedclip.deluxemenus.menu.MenuHolder;
 import com.extendedclip.deluxemenus.menu.MenuItem;
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
+import kz.hxncus.mc.fastpluginconfigurer.converter.Convertible;
 import kz.hxncus.mc.fastpluginconfigurer.util.FileUtils;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -20,6 +21,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 public class DeluxeMenusHook implements Convertible {
     private final FastPluginConfigurer plugin;
@@ -41,19 +43,19 @@ public class DeluxeMenusHook implements Convertible {
             player.sendMessage("Menu not found: " + fileName);
             return;
         }
-        Inventory chestInventory = ((Chest) state).getInventory();
-        chestInventory.clear();
-        storeConfigItemsInInventory(player, menu, chestInventory);
-        player.sendMessage("Successfully stored all items to chest.");
+        storeConfigItemsInInventory(player, ((Chest) state).getInventory(), menu);
     }
 
-    private static void storeConfigItemsInInventory(Player player, Menu menu, Inventory chestInventory) {
+    private void storeConfigItemsInInventory(Player player, Inventory chestInventory, Menu menu) {
+        chestInventory.clear();
         MenuHolder holder = new MenuHolder(player);
         for (Map.Entry<Integer, TreeMap<Integer, MenuItem>> entry : menu.getMenuItems().entrySet()) {
             for (MenuItem item : entry.getValue().values()) {
                 chestInventory.setItem(item.getSlot(), item.getItemStack(holder));
             }
         }
+        player.openInventory(chestInventory);
+        player.sendMessage("Successfully stored all items to the chest.");
     }
 
     @Override
@@ -77,14 +79,19 @@ public class DeluxeMenusHook implements Convertible {
         player.sendMessage("Chest inventory successfully saved into " + fileName);
     }
 
-    private static void configureInventory(String fileName, FileConfiguration config, Inventory chestInventory) {
+    @Override
+    public List<String> getAllFileNames() {
+        return Menu.getAllMenus().stream().map(Menu::getMenuName).collect(Collectors.toList());
+    }
+
+    private void configureInventory(String fileName, FileConfiguration config, Inventory chestInventory) {
         config.set("menu_title", fileName);
         config.set("register_command", true);
         config.set("open_command", List.of(fileName));
         config.set("size", chestInventory.getSize());
     }
 
-    private static void storeInventoryInConfig(Inventory chestInventory, FileConfiguration config) {
+    private void storeInventoryInConfig(Inventory chestInventory, FileConfiguration config) {
         int count = 0;
         for (int i = 0; i < chestInventory.getSize(); i++) {
             ItemStack item = chestInventory.getItem(i);
@@ -95,7 +102,7 @@ public class DeluxeMenusHook implements Convertible {
         }
     }
 
-    private static void storeItemInConfig(ItemStack item, FileConfiguration config, int count, int i) {
+    private void storeItemInConfig(ItemStack item, FileConfiguration config, int count, int i) {
         String path = String.format("items.%s.", count);
         ItemMeta itemMeta = item.getItemMeta();
         config.set(path + "material", item.getType().name());

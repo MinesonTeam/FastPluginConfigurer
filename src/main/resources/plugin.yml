@@ -5,6 +5,8 @@ api-version: 1.13
 softdepend:
   - DeluxeMenus
   - ChestCommands
+  - zMenu
+  - BetterGUI
 commands:
   fastpluginconfigurer:
     aliases:

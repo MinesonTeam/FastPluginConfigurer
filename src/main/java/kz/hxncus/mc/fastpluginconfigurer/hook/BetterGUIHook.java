@@ -3,11 +3,13 @@ package kz.hxncus.mc.fastpluginconfigurer.hook;
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
 import kz.hxncus.mc.fastpluginconfigurer.converter.Convertible;
 import kz.hxncus.mc.fastpluginconfigurer.util.FileUtils;
-import me.filoghost.chestcommands.api.Icon;
-import me.filoghost.chestcommands.fcommons.collection.CaseInsensitiveString;
-import me.filoghost.chestcommands.inventory.Grid;
-import me.filoghost.chestcommands.menu.BaseMenu;
-import me.filoghost.chestcommands.menu.MenuManager;
+import me.hsgamer.bettergui.BetterGUI;
+import me.hsgamer.bettergui.api.menu.Menu;
+import me.hsgamer.bettergui.lib.core.bukkit.gui.object.BukkitItem;
+import me.hsgamer.bettergui.lib.core.minecraft.gui.button.Button;
+import me.hsgamer.bettergui.lib.core.minecraft.gui.object.Item;
+import me.hsgamer.bettergui.lib.core.minecraft.gui.simple.SimpleButtonMap;
+import me.hsgamer.bettergui.menu.SimpleMenu;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -20,13 +22,16 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-public class ChestCommandsHook implements Convertible {
+public class BetterGUIHook implements Convertible {
     private final FastPluginConfigurer plugin;
 
-    public ChestCommandsHook(FastPluginConfigurer plugin) {
+    public BetterGUIHook(FastPluginConfigurer plugin) {
         this.plugin = plugin;
     }
 
@@ -38,24 +43,26 @@ public class ChestCommandsHook implements Convertible {
             player.sendMessage("You must be looking at a double chest to execute this command.");
             return;
         }
-        BaseMenu menu = MenuManager.getMenuByFileName(fileName);
-        if (menu == null) {
+        Menu menu = BetterGUI.getInstance().getMenuManager().getMenu(fileName);
+        if (!(menu instanceof SimpleMenu)) {
             player.sendMessage("Menu not found: " + fileName);
             return;
         }
-        storeConfigItemsInInventory(player, ((Chest) state).getInventory(), menu.getIcons());
+        storeConfigItemsInInventory(player, ((Chest) state).getInventory(), ((SimpleMenu) menu).getButtonMap());
     }
 
-    private void storeConfigItemsInInventory(Player player, Inventory chestInventory, Grid<Icon> icons) {
+    private void storeConfigItemsInInventory(Player player, Inventory chestInventory, SimpleButtonMap buttonMap) {
         chestInventory.clear();
-        for (int i = 0; i < icons.getRows(); i++) {
-            for (int j = 0; j < icons.getColumns(); j++) {
-                Icon icon = icons.get(i, j);
-                if (icon == null) {
-                    continue;
-                }
-                chestInventory.setItem(i * 9 + j, icon.render(player));
+        for (Map.Entry<Button, Collection<Integer>> entry : buttonMap.getButtonSlotMap().entrySet()) {
+            Item item = entry.getKey().getItem(player.getUniqueId());
+            if (!(item instanceof BukkitItem)) {
+                continue;
             }
+            ItemStack itemStack = ((BukkitItem) item).getItemStack();
+            for (int i : entry.getValue()) {
+                chestInventory.setItem(i, itemStack);
+            }
+
         }
         player.openInventory(chestInventory);
         player.sendMessage("Successfully stored all items to the chest.");
@@ -82,6 +89,12 @@ public class ChestCommandsHook implements Convertible {
         player.sendMessage("Chest inventory successfully saved into " + fileName);
     }
 
+    private void configureInventory(String fileName, FileConfiguration config, Inventory chestInventory) {
+        config.set("menu-settings.name", fileName);
+        config.set("menu-settings.rows", chestInventory.getSize() / 9);
+        config.set("menu-settings.command", fileName);
+    }
+
     private void storeInventoryInConfig(Inventory chestInventory, FileConfiguration config) {
         int count = 0;
         for (int i = 0; i < chestInventory.getSize(); i++) {
@@ -93,38 +106,29 @@ public class ChestCommandsHook implements Convertible {
         }
     }
 
-    private void configureInventory(String fileName, FileConfiguration config, Inventory chestInventory) {
-        config.set("menu-settings.name", fileName);
-        config.set("menu-settings.rows", chestInventory.getSize() / 9);
-        config.set("menu-settings.commands", List.of(fileName));
+    private void setItemToConfig(ItemStack item, FileConfiguration config, int count, int i) {
+        ItemMeta itemMeta = item.getItemMeta();
+        if (itemMeta != null) {
+            if (itemMeta.hasDisplayName()) {
+                config.set(count + ".NAME", itemMeta.getDisplayName());
+            }
+            if (itemMeta.hasLore()) {
+                config.set(count + ".LORE", itemMeta.getLore());
+            }
+            if (itemMeta.hasEnchants()) {
+                config.set(count + ".ENCHANTMENT", itemMeta.getEnchants().entrySet().stream()
+                                                           .map(entry -> entry.getKey().getKey().getKey() + ", " + entry.getValue())
+                                                           .collect(Collectors.toList()));
+            }
+        }
+        config.set(count + ".ID", item.getType().name() + (item.getDurability() != 0 ? "" : ":" + item.getDurability()));
+        config.set(count + ".AMOUNT", item.getAmount());
+        config.set(count + ".POSITION-X", i % 9 + 1);
+        config.set(count + ".POSITION-Y", i / 9 + 1);
     }
 
     @Override
     public List<String> getAllFileNames() {
-        return MenuManager.getMenuFileNames().stream().map(CaseInsensitiveString::toString).collect(Collectors.toList());
-    }
-
-    private void setItemToConfig(ItemStack item, FileConfiguration config, int count, int i) {
-        ItemMeta itemMeta = item.getItemMeta();
-        config.set(count + ".ACTIONS", List.of(""));
-        if (itemMeta.hasDisplayName()) {
-            config.set(count + ".NAME", itemMeta.getDisplayName());
-        }
-        if (itemMeta.hasLore()) {
-            config.set(count + ".LORE", itemMeta.getLore());
-        }
-        if (item.getDurability() != 0) {
-            config.set(count + ".DURATION", item.getDurability());
-        }
-        if (itemMeta.hasEnchants()) {
-            config.set(count + ".ENCHANTMENTS", itemMeta.getEnchants().entrySet().stream()
-                                                        .map(entry -> entry.getKey().getName() + ", " + entry.getValue())
-                                                        .collect(Collectors.toList()));
-        }
-        config.set(count + ".AMOUNT", item.getAmount());
-        config.set(count + ".MATERIAL", item.getType().name());
-        config.set(count + ".KEEP-OPEN", true);
-        config.set(count + ".POSITION-X", i % 9 + 1);
-        config.set(count + ".POSITION-Y", i / 9 + 1);
+        return new ArrayList<>(BetterGUI.getInstance().getMenuManager().getMenuNames());
     }
 }

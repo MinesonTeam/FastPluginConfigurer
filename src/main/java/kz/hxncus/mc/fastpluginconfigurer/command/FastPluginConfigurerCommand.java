@@ -1,15 +1,13 @@
 package kz.hxncus.mc.fastpluginconfigurer.command;
 
-import com.extendedclip.deluxemenus.menu.Menu;
 import kz.hxncus.mc.fastpluginconfigurer.Constants;
-import kz.hxncus.mc.fastpluginconfigurer.FastPlayer;
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
-import kz.hxncus.mc.fastpluginconfigurer.hook.Convertible;
+import kz.hxncus.mc.fastpluginconfigurer.converter.Converters;
+import kz.hxncus.mc.fastpluginconfigurer.converter.Convertible;
+import kz.hxncus.mc.fastpluginconfigurer.fast.FastPlayer;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.BasicFastInventory;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.FastInventory;
 import kz.hxncus.mc.fastpluginconfigurer.util.ItemBuilder;
-import me.filoghost.chestcommands.fcommons.collection.CaseInsensitiveString;
-import me.filoghost.chestcommands.menu.MenuManager;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.apache.commons.lang.StringUtils;
@@ -19,12 +17,13 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.PluginManager;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -71,17 +70,13 @@ public class FastPluginConfigurerCommand extends DefaultCommand {
 
     private void inventorySubCommand(CommandSender sender, String[] args, String args0) {
         String args2 = args[2];
-        Convertible converter;
-        switch (args[1]) {
-            case "deluxemenus":
-                converter = plugin.getDeluxeMenusHook();
+        Convertible converter = null;
+        for (Converters converters : Converters.values()) {
+            Convertible convertible = converters.getConverter();
+            if (convertible != null && args[1].equals(converters.getName())) {
+                converter = convertible;
                 break;
-            case "chestcommands":
-                converter = plugin.getChestCommandsHook();
-                break;
-            default:
-                converter = null;
-                break;
+            }
         }
         if (converter == null) {
             sender.sendMessage("This converter type is not exists.");
@@ -102,14 +97,23 @@ public class FastPluginConfigurerCommand extends DefaultCommand {
             return;
         }
         targetPlugin.reloadConfig();
-
         FastInventory fastInventory = new BasicFastInventory(plugin, 54, args[1]);
         fastInventory.addClickHandler(event -> event.setCancelled(true));
 
-        FastPluginConfigurer.getFastPlayer(humanEntity.getUniqueId()).setDataFolderPath(targetPlugin.getDataFolder().getPath());
+        String path = targetPlugin.getDataFolder().getPath() + File.separator;
+        File file;
+        if (args.length < 3) {
+            file = new File(path + "config.yml");
+        } else {
+            file = new File(path + args[2]);
+        }
+        String pluginName = targetPlugin.getName();
+        FastPlayer fastPlayer = FastPluginConfigurer.getFastPlayer(humanEntity.getUniqueId());
+        fastPlayer.setFile(file);
+        fastPlayer.setLastPluginName(pluginName);
 
-        FileConfiguration config = targetPlugin.getConfig();
-        setupConfigInventories(config.getKeys(false).iterator(), fastInventory, config, targetPlugin.getName());
+        FileConfiguration config = YamlConfiguration.loadConfiguration(file);
+        setupConfigInventories(config.getKeys(false).iterator(), fastInventory, config, pluginName);
         fastInventory.open(humanEntity);
     }
 
@@ -190,8 +194,7 @@ public class FastPluginConfigurerCommand extends DefaultCommand {
         FastPlayer player = FastPluginConfigurer.getFastPlayer(humanEntity.getUniqueId());
         player.setChatSetKey(true);
         player.setPath(fullPath);
-        player.setChatTask(Bukkit.getScheduler().runTaskLater(plugin,
-                () -> player.setChatSetKey(false), 600L));
+        player.setChatTask(Bukkit.getScheduler().runTaskLater(plugin, () -> player.setChatSetKey(false), 1200L));
         humanEntity.sendMessage("Write a value for path §e" + fullPath + "§r in the chat or write \"cancel\" to cancel.");
     }
 
@@ -203,8 +206,8 @@ public class FastPluginConfigurerCommand extends DefaultCommand {
             FastPlayer player = FastPluginConfigurer.getFastPlayer(humanEntity.getUniqueId());
             player.setChatSetKey(true);
             player.setPath(fullPath);
-            player.setChatTask(Bukkit.getScheduler().runTaskLater(plugin, () -> player.setChatSetKey(false), 600L));
-            humanEntity.sendMessage("Write a value for path §e" + fullPath + "§r in the chat");
+            player.setChatTask(Bukkit.getScheduler().runTaskLater(plugin, () -> player.setChatSetKey(false), 1200L));
+            humanEntity.sendMessage("Write a value for path §e" + fullPath + "§r in the chat or write \"cancel\" to cancel.");
             return;
         }
         if (valueString.length() > 256) {
@@ -243,23 +246,33 @@ public class FastPluginConfigurerCommand extends DefaultCommand {
 
     @Override
     public List<String> complete(CommandSender sender, Command command, String[] args) {
-        if (args.length == 1) {
+        int length = args.length;
+        if (length == 1) {
             return List.of("config", "inventorytofile", "filetoinventory");
         }
-        PluginManager pluginManager = plugin.getPluginManager();
-        String method = args[0].toLowerCase();
-        if (args.length == 2 && (method.equals("inventorytofile") || method.equals("filetoinventory"))) {
-            return List.of("deluxemenus", "chestcommands");
-        } else if (args.length == 2 && method.equals("config")) {
-            return Arrays.stream(pluginManager.getPlugins()).map(Plugin::getName).collect(Collectors.toList());
+        String args0 = args[0].toLowerCase();
+        if (length == 2 && (args0.equals("inventorytofile") || args0.equals("filetoinventory"))) {
+            return List.of("deluxemenus", "chestcommands", "bettergui", "zmenu");
+        } else if (length == 2 && args0.equals("config")) {
+            return Arrays.stream(plugin.getPluginManager().getPlugins()).map(Plugin::getName).collect(Collectors.toList());
         }
-        String converter = args[1].toLowerCase();
-        if (converter.equals("deluxemenus") && pluginManager.getPlugin(converter) != null
-                && args.length == 3 && method.equals("filetoinventory")) {
-            return Menu.getAllMenus().stream().map(Menu::getMenuName).collect(Collectors.toList());
-        } else if (converter.equals("chestcommands") && pluginManager.getPlugin(converter) != null
-                && args.length == 3 && method.equals("filetoinventory")) {
-            return MenuManager.getMenuFileNames().stream().map(CaseInsensitiveString::toString).collect(Collectors.toList());
+        String args1 = args[1];
+        if (args0.equals("filetoinventory")) {
+            for (Converters converters : Converters.values()) {
+                if (length == 3 && args1.equalsIgnoreCase(converters.getName())) {
+                    return converters.getConverter().getAllFileNames();
+                }
+            }
+        } else if (args0.equals("config")) {
+            Plugin targetPlugin = plugin.getPluginManager().getPlugin(args1);
+            if (targetPlugin == null) {
+                return Collections.emptyList();
+            }
+            String[] array = targetPlugin.getDataFolder().list();
+            if (array == null || array.length == 0) {
+                return Collections.emptyList();
+            }
+            return Arrays.stream(array).filter(fileName -> fileName.endsWith(".yml")).collect(Collectors.toList());
         }
         return Collections.emptyList();
     }

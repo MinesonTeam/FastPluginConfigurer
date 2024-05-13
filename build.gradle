@@ -22,6 +22,8 @@ dependencies {
     compileOnly "org.spigotmc:spigot-api:1.14-R0.1-SNAPSHOT"
     compileOnly(files('E:\\dev-server-1.16.5\\plugins\\DeluxeMenus-1.14.0-Release.jar'))
     compileOnly(files('E:\\dev-server-1.16.5\\plugins\\ChestCommands.jar'))
+    compileOnly(files('E:\\dev-server-1.16.5\\plugins\\zmenu-1.0.3.1.jar'))
+    compileOnly(files('E:\\dev-server-1.16.5\\plugins\\bettergui-9.6-shaded.jar'))
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
     compileOnly 'org.projectlombok:lombok:1.18.30'
