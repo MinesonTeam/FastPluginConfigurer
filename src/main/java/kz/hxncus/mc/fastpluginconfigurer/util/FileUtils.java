@@ -15,8 +15,7 @@ public class FileUtils {
             config.load(file);
             return true;
         } catch (IOException | InvalidConfigurationException e) {
-            e.printStackTrace();
-            return false;
+            throw new RuntimeException(e);
         }
     }
 }

@@ -114,7 +114,7 @@ public class BasicFastInventory implements FastInventory {
 
     @NonNull
     public int setItem(int slot, ItemStack item) {
-        this.inventory.setItem(slot, marking ? plugin.getInventoryItemMarker().markItem(item) : item);
+        this.inventory.setItem(slot, marking ? plugin.getItemMarker().markItem(item) : item);
         return slot;
     }
 

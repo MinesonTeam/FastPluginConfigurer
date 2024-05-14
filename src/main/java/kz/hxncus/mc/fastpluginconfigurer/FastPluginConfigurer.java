@@ -1,6 +1,6 @@
 package kz.hxncus.mc.fastpluginconfigurer;
 
-import kz.hxncus.mc.fastpluginconfigurer.command.FastPluginConfigurerCommand;
+import kz.hxncus.mc.fastpluginconfigurer.command.FPCCommand;
 import kz.hxncus.mc.fastpluginconfigurer.fast.FastPlayer;
 import kz.hxncus.mc.fastpluginconfigurer.hook.BetterGUIHook;
 import kz.hxncus.mc.fastpluginconfigurer.hook.ChestCommandsHook;
@@ -19,27 +19,24 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.logging.Logger;
 
 @Getter
 public final class FastPluginConfigurer extends JavaPlugin {
     @Getter
     private static FastPluginConfigurer instance;
-    private final Logger LOGGER = Logger.getLogger("FastPluginConfigurer");
     private DeluxeMenusHook deluxeMenusHook;
     private ChestCommandsHook chestCommandsHook;
     private BetterGUIHook betterguiHook;
     private ZMenuHook zMenuHook;
     private File converterDirectory;
-    private final InventoryItemMarker inventoryItemMarker = new InventoryItemMarker(this);
-    private final PluginManager pluginManager = Bukkit.getPluginManager();
-    private static final Map<UUID, FastPlayer> FAST_PLAYER_MAP = new HashMap<>();
+    private final InventoryItemMarker itemMarker = new InventoryItemMarker(this);
+    private static final Map<UUID, FastPlayer> PLAYER_MAP = new HashMap<>();
 
-    public static FastPlayer getFastPlayer(UUID uuid) {
-        return FAST_PLAYER_MAP.computeIfAbsent(uuid, FastPlayer::new);
+    public static FastPlayer getFastPlayer(final UUID uuid) {
+        return PLAYER_MAP.computeIfAbsent(uuid, FastPlayer::new);
     }
-    public static FastPlayer removePlayer(UUID uuid) {
-        return FAST_PLAYER_MAP.remove(uuid);
+    public static FastPlayer removePlayer(final UUID uuid) {
+        return PLAYER_MAP.remove(uuid);
     }
 
     @Override
@@ -50,8 +47,8 @@ public final class FastPluginConfigurer extends JavaPlugin {
     @Override
     public void onEnable() {
         registerDirectories();
-        registerConverters();
-        registerEvents();
+        registerConverters(Bukkit.getPluginManager());
+        registerEvents(Bukkit.getPluginManager());
         registerCommands();
     }
 
@@ -60,27 +57,27 @@ public final class FastPluginConfigurer extends JavaPlugin {
         InventoryManager.getInstance().closeAll();
     }
 
-    private void registerConverters() {
+    private void registerConverters(PluginManager pluginManager) {
         if (pluginManager.getPlugin("deluxemenus") != null) {
             deluxeMenusHook = new DeluxeMenusHook(this);
-            LOGGER.info("Hook DeluxeMenus is enabled successfully.");
+            getLogger().info("Hook DeluxeMenus is enabled successfully.");
         }
         if (pluginManager.getPlugin("chestcommands") != null) {
             chestCommandsHook = new ChestCommandsHook(this);
-            LOGGER.info("Hook ChestCommands is enabled successfully.");
+            getLogger().info("Hook ChestCommands is enabled successfully.");
         }
         if (pluginManager.getPlugin("bettergui") != null) {
             betterguiHook = new BetterGUIHook(this);
-            LOGGER.info("Hook BetterGUI is enabled successfully.");
+            getLogger().info("Hook BetterGUI is enabled successfully.");
         }
         if (pluginManager.getPlugin("zmenu") != null) {
             zMenuHook = new ZMenuHook(this);
-            LOGGER.info("Hook zMenu is enabled successfully.");
+            getLogger().info("Hook zMenu is enabled successfully.");
         }
     }
 
     private void registerCommands() {
-        new FastPluginConfigurerCommand(this);
+        new FPCCommand(this);
     }
 
     private void registerDirectories() {
@@ -88,7 +85,7 @@ public final class FastPluginConfigurer extends JavaPlugin {
         converterDirectory.mkdirs();
     }
 
-    private void registerEvents() {
+    private void registerEvents(PluginManager pluginManager) {
         pluginManager.registerEvents(InventoryManager.getInstance(), this);
         pluginManager.registerEvents(new DupeFixer(this), this);
         pluginManager.registerEvents(new PlayerListener(this), this);

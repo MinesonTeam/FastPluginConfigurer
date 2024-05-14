@@ -19,7 +19,7 @@ public class DupeFixer implements Listener {
     private final InventoryItemMarker inventoryItemMarker;
     public DupeFixer(FastPluginConfigurer plugin) {
         this.plugin = plugin;
-        this.inventoryItemMarker = plugin.getInventoryItemMarker();
+        this.inventoryItemMarker = plugin.getItemMarker();
     }
 
     @EventHandler

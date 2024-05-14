@@ -118,7 +118,7 @@ public class DeluxeMenusHook implements Convertible {
         }
         config.set(path + "slot", i);
         if (itemMeta.hasEnchants()) {
-            config.set(path + "enchantments", itemMeta.getEnchants().entrySet().stream().map(entry -> entry.getKey().getName() + ";" + entry.getValue()).collect(java.util.stream.Collectors.toList()));
+            config.set(path + "enchantments", itemMeta.getEnchants().entrySet().stream().map(entry -> entry.getKey().getName() + ";" + entry.getValue()).collect(Collectors.toList()));
         }
     }
 }

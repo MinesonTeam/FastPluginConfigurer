@@ -30,13 +30,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class FastPluginConfigurerCommand extends DefaultCommand {
-    public FastPluginConfigurerCommand(FastPluginConfigurer plugin) {
+public class FPCCommand extends DefaultCommand {
+    public FPCCommand(FastPluginConfigurer plugin) {
         super(plugin, "fastpluginconfigurer");
     }
 
     @Override
-    public void execute(CommandSender sender, Command command, String label, String[] args) {
+    public void execute(CommandSender sender, Command command, String label, String... args) {
         if (!(sender instanceof Player)) {
             sender.sendMessage("You must be a player to execute this command.");
             return;
@@ -51,15 +51,15 @@ public class FastPluginConfigurerCommand extends DefaultCommand {
             return;
         }
         switch (args0) {
-            case "inventorytofile":
-            case "filetoinventory":
+            case Constants.INVENTORY_TO_FILE:
+            case Constants.FILE_TO_INVENTORY:
                 if (args.length == 2) {
                     sendHelpMessage(sender, label);
                     return;
                 }
-                inventorySubCommand(sender, args, args0);
+                inventorySubCommand(sender, args0, args);
                 break;
-            case "config":
+            case Constants.CONFIG:
                 configSubCommand((HumanEntity) sender, args);
                 break;
             default:
@@ -68,7 +68,7 @@ public class FastPluginConfigurerCommand extends DefaultCommand {
         }
     }
 
-    private void inventorySubCommand(CommandSender sender, String[] args, String args0) {
+    private void inventorySubCommand(CommandSender sender, String args0, String... args) {
         String args2 = args[2];
         Convertible converter = null;
         for (Converters converters : Converters.values()) {
@@ -83,15 +83,15 @@ public class FastPluginConfigurerCommand extends DefaultCommand {
             return;
         }
         Player player = (Player) sender;
-        if (args0.equals("inventorytofile")) {
+        if (args0.equals(Constants.INVENTORY_TO_FILE)) {
             converter.inventoryToFile(player, args2);
-        } else if (args0.equals("filetoinventory")) {
+        } else if (args0.equals(Constants.FILE_TO_INVENTORY)) {
             converter.fileToInventory(player, args2);
         }
     }
 
-    public void configSubCommand(HumanEntity humanEntity, String[] args) {
-        Plugin targetPlugin = plugin.getPluginManager().getPlugin(args[1]);
+    public void configSubCommand(HumanEntity humanEntity, String... args) {
+        Plugin targetPlugin = Bukkit.getPluginManager().getPlugin(args[1]);
         if (targetPlugin == null) {
             humanEntity.sendMessage("This plugin doesn't exist.");
             return;
@@ -107,13 +107,12 @@ public class FastPluginConfigurerCommand extends DefaultCommand {
         } else {
             file = new File(path + args[2]);
         }
-        String pluginName = targetPlugin.getName();
         FastPlayer fastPlayer = FastPluginConfigurer.getFastPlayer(humanEntity.getUniqueId());
         fastPlayer.setFile(file);
-        fastPlayer.setLastPluginName(pluginName);
+        fastPlayer.setLastPluginName(targetPlugin.getName());
 
         FileConfiguration config = YamlConfiguration.loadConfiguration(file);
-        setupConfigInventories(config.getKeys(false).iterator(), fastInventory, config, pluginName);
+        setupConfigInventories(config.getKeys(false).iterator(), fastInventory, config, targetPlugin.getName());
         fastInventory.open(humanEntity);
     }
 
@@ -131,7 +130,9 @@ public class FastPluginConfigurerCommand extends DefaultCommand {
             }
             setupKey(lastPluginName, inventory, section, path);
         }
-        addNewKeyItem(inventory, section.getCurrentPath());
+        if (inventory.firstEmpty() <= 44) {
+            addNewKeyItem(inventory, section.getCurrentPath());
+        }
     }
 
     private void setNextAndPreviousPages(FastInventory currentInv, FastInventory nextInv) {
@@ -144,20 +145,15 @@ public class FastPluginConfigurerCommand extends DefaultCommand {
     }
     
     private void addNewKeyItem(FastInventory inventory, String currentPath) {
-        if (inventory.firstEmpty() <= 44) {
-            inventory.addItem(new ItemBuilder(Material.NETHER_STAR).setDisplayName("§fClick to add a new key")
-                                                                   .build(), event -> {
-                HumanEntity humanEntity = event.getWhoClicked();
-                humanEntity.closeInventory();
+        inventory.addItem(new ItemBuilder(Material.NETHER_STAR).setDisplayName("§fClick to add a new key").build(), event -> {
+            HumanEntity humanEntity = event.getWhoClicked();
+            humanEntity.closeInventory();
 
-                FastPlayer player = FastPluginConfigurer.getFastPlayer(humanEntity.getUniqueId());
-                player.setChatAddKey(true);
-                player.setPath(currentPath);
-                player.setChatTask(Bukkit.getScheduler()
-                                         .runTaskLater(plugin, () -> player.setChatAddKey(false), 600L));
-                humanEntity.sendMessage("Write down the new key in the chat." + (StringUtils.isEmpty(currentPath) ? "" : " Path: " + currentPath));
-            });
-        }
+            FastPlayer player = FastPluginConfigurer.getFastPlayer(humanEntity.getUniqueId());
+            player.setChatAddKey(true, plugin);
+            player.setPath(currentPath);
+            humanEntity.sendMessage("Write down the new key in the chat." + (StringUtils.isEmpty(currentPath) ? "" : " Path: " + currentPath));
+        });
     }
 
     private void setupKey(String lastPluginName, FastInventory inventory, ConfigurationSection section, String path) {
@@ -167,21 +163,21 @@ public class FastPluginConfigurerCommand extends DefaultCommand {
         if (sections != null) {
             FastInventory fastInventory = new BasicFastInventory(plugin, 54, lastPluginName);
             fastInventory.addClickHandler(event -> event.setCancelled(true));
-            inventory.addItem(new ItemBuilder(Material.OAK_SIGN)
-                    .setDisplayName("§fSection: §e" + path)
-                    .addLore(Constants.ADDITIONAL_SECTION_LORE)
+            inventory.addItem(new ItemBuilder(Material.OAK_SIGN).setDisplayName("§fSection: §e" + path)
+                    .addLore(Constants.CONFIG_SECTION_LORE)
                     .build(), event -> onSectionClick(event, fastInventory, fullPath));
             setPreviousPage(fastInventory, inventory);
             setupConfigInventories(sections.getKeys(false).iterator(), fastInventory, sections, lastPluginName);
             return;
         }
-        Object value = section.get(path, "");
-        String valueString = value == null ? "" : value.toString();
-        inventory.addItem(new ItemBuilder(getMaterialFromValue(value))
-                              .setDisplayName("§fKey: §e" + fullPath)
-                              .addLore("§7Current value:", " §8▪ §e" + (StringUtils.isEmpty(valueString) ? "§o§mempty value" : value))
-                              .addLore(Constants.ADDITIONAL_ITEM_LORE).setAmount((value instanceof Number) ? ((Number) value).intValue() : 1)
-                              .build(), event -> onItemClick(event, fullPath, valueString));
+        addKeyItemToInventory(inventory, section.get(path, ""), fullPath);
+    }
+
+    private void addKeyItemToInventory(FastInventory inventory, Object value, String fullPath) {
+        inventory.addItem(new ItemBuilder(getMaterialFromValue(value)).setDisplayName("§fKey: §e" + fullPath)
+                                                                      .addLore("§7Current value:", " §8▪ §e" + (StringUtils.isEmpty(value.toString()) ? "§o§mempty value" : value))
+                                                                      .addLore(Constants.CONFIG_ITEM_LORE).setAmount((value instanceof Number) ? ((Number) value).intValue() : 1)
+                                                                      .build(), event -> onItemClick(event, fullPath, value.toString()));
     }
 
     private void onSectionClick(InventoryClickEvent event, FastInventory fastInventory, String fullPath) {
@@ -192,9 +188,8 @@ public class FastPluginConfigurerCommand extends DefaultCommand {
             return;
         }
         FastPlayer player = FastPluginConfigurer.getFastPlayer(humanEntity.getUniqueId());
-        player.setChatSetKey(true);
+        player.setChatSetKey(true, plugin);
         player.setPath(fullPath);
-        player.setChatTask(Bukkit.getScheduler().runTaskLater(plugin, () -> player.setChatSetKey(false), 1200L));
         humanEntity.sendMessage("Write a value for path §e" + fullPath + "§r in the chat or write \"cancel\" to cancel.");
     }
 
@@ -204,37 +199,32 @@ public class FastPluginConfigurerCommand extends DefaultCommand {
             humanEntity.closeInventory();
 
             FastPlayer player = FastPluginConfigurer.getFastPlayer(humanEntity.getUniqueId());
-            player.setChatSetKey(true);
+            player.setChatSetKey(true, plugin);
             player.setPath(fullPath);
-            player.setChatTask(Bukkit.getScheduler().runTaskLater(plugin, () -> player.setChatSetKey(false), 1200L));
             humanEntity.sendMessage("Write a value for path §e" + fullPath + "§r in the chat or write \"cancel\" to cancel.");
             return;
-        }
-        if (valueString.length() > 256) {
+        } else if (valueString.length() > 256) {
             humanEntity.sendMessage("The value is too long to be copied. Please change the value in the config.");
             return;
         }
-        TextComponent textComponent = new TextComponent("Click this message to copy the value " + valueString);
+        TextComponent textComponent = new TextComponent("Open chat then click this message to copy the value: " + valueString);
         textComponent.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, valueString));
         humanEntity.spigot().sendMessage(textComponent);
     }
 
     private static Material getMaterialFromValue(Object value) {
-        Material material;
         if (value instanceof String) {
-            material = Material.STRING;
+            return Material.STRING;
         } else if (value instanceof Number) {
-            material = Material.ENDER_PEARL;
+            return Material.ENDER_PEARL;
         } else if (value instanceof Enum) {
-            material = Material.ITEM_FRAME;
+            return Material.ITEM_FRAME;
         } else if (value instanceof Boolean) {
-            material = (boolean) value ? Material.SLIME_BALL : Material.MAGMA_CREAM;
+            return (boolean) value ? Material.SLIME_BALL : Material.MAGMA_CREAM;
         } else if (value instanceof Iterable<?>) {
-            material = Material.BOOKSHELF;
-        } else {
-            material = Material.BEDROCK;
+            return Material.BOOKSHELF;
         }
-        return material;
+        return Material.BEDROCK;
     }
 
     private void sendHelpMessage(CommandSender sender, String label) {
@@ -245,36 +235,51 @@ public class FastPluginConfigurerCommand extends DefaultCommand {
     }
 
     @Override
-    public List<String> complete(CommandSender sender, Command command, String[] args) {
+    public List<String> complete(CommandSender sender, Command command, String... args) {
         int length = args.length;
         if (length == 1) {
-            return List.of("config", "inventorytofile", "filetoinventory");
+            return List.of(Constants.CONFIG, Constants.INVENTORY_TO_FILE, Constants.FILE_TO_INVENTORY);
         }
         String args0 = args[0].toLowerCase();
-        if (length == 2 && (args0.equals("inventorytofile") || args0.equals("filetoinventory"))) {
-            return List.of("deluxemenus", "chestcommands", "bettergui", "zmenu");
-        } else if (length == 2 && args0.equals("config")) {
-            return Arrays.stream(plugin.getPluginManager().getPlugins()).map(Plugin::getName).collect(Collectors.toList());
+        if (length == 2) {
+            return getListAtLength2(args0);
         }
         String args1 = args[1];
-        if (args0.equals("filetoinventory")) {
-            for (Converters converters : Converters.values()) {
-                if (length == 3 && args1.equalsIgnoreCase(converters.getName())) {
-                    return converters.getConverter().getAllFileNames();
-                }
-            }
-        } else if (args0.equals("config")) {
-            Plugin targetPlugin = plugin.getPluginManager().getPlugin(args1);
-            if (targetPlugin == null) {
-                return Collections.emptyList();
-            }
-            String[] array = targetPlugin.getDataFolder().list();
-            if (array == null || array.length == 0) {
-                return Collections.emptyList();
-            }
-            return Arrays.stream(array).filter(fileName -> fileName.endsWith(".yml")).collect(Collectors.toList());
+        if (length == 3) {
+            return getListAtLength3(args0, args1);
         }
         return Collections.emptyList();
     }
-    
+
+    private List<String> getListAtLength2(String args0) {
+        if ((args0.equals(Constants.INVENTORY_TO_FILE) || args0.equals(Constants.FILE_TO_INVENTORY))) {
+            return List.of("deluxemenus", "chestcommands", "bettergui", "zmenu");
+        } else if (args0.equals(Constants.CONFIG)) {
+            return Arrays.stream(Bukkit.getPluginManager().getPlugins())
+                         .map(Plugin::getName)
+                         .collect(Collectors.toList());
+        }
+        return Collections.emptyList();
+    }
+
+    private List<String> getListAtLength3(String args0, String args1) {
+        if (args0.equals(Constants.FILE_TO_INVENTORY)) {
+            for (Converters converters : Converters.values()) {
+                if (converters.getName().equalsIgnoreCase(args1)) {
+                    return converters.getConverter().getAllFileNames();
+                }
+            }
+        } else if (args0.equals(Constants.CONFIG)) {
+            Plugin targetPlugin = Bukkit.getPluginManager().getPlugin(args1);
+            if (targetPlugin == null) {
+                return Collections.emptyList();
+            }
+            String[] array = targetPlugin.getDataFolder().list((dir, name) -> name.endsWith(".yml"));
+            if (array == null) {
+                return Collections.emptyList();
+            }
+            return Arrays.asList(array);
+        }
+        return Collections.emptyList();
+    }
 }

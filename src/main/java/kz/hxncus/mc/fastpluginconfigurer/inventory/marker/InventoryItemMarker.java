@@ -9,12 +9,10 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 
 public class InventoryItemMarker implements ItemMarker {
-    private final Plugin plugin;
     private final NamespacedKey markKey;
 
     public InventoryItemMarker(Plugin plugin) {
-        this.plugin = plugin;
-        markKey = new NamespacedKey(this.plugin, "mark");
+        markKey = new NamespacedKey(plugin, "mark");
     }
 
     @NonNull

@@ -26,42 +26,7 @@ public class PlayerListener implements Listener {
         this.plugin = plugin;
     }
 
-    @EventHandler
-    public void onPlayerWriteConfigValue(AsyncPlayerChatEvent event) {
-        Player player = event.getPlayer();
-        FastPlayer fastPlayer = FastPluginConfigurer.getFastPlayer(player.getUniqueId());
-        String message = event.getMessage();
-        if (!fastPlayer.isChatSetKey()) {
-            return;
-        }
-        File file = fastPlayer.getFile();
-        if (!file.exists()) {
-            try {
-                new File(file.getParentFile().getPath()).mkdirs();
-                file.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-                return;
-            }
-        }
-        if (message.equalsIgnoreCase("cancel")) {
-            resetChatSetting(fastPlayer);
-            openLastOpenInventory(fastPlayer, player, file);
-        }
-        String path = fastPlayer.getPath();
-        if (path == null) {
-            player.sendMessage("Invalid path.");
-            return;
-        }
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-        config.set(path, convert(message));
-        FileUtils.reload(config, file);
-        resetChatSetting(fastPlayer);
-        openLastOpenInventory(fastPlayer, player, file);
-        event.setCancelled(true);
-    }
-
-    private void openLastOpenInventory(FastPlayer fastPlayer, Player player, File file) {
+    private void openLastClosedInventory(FastPlayer fastPlayer, Player player, File file) {
         String pluginName = fastPlayer.getLastPluginName();
         if (pluginName != null) {
             Bukkit.getScheduler().runTask(plugin,
@@ -69,17 +34,12 @@ public class PlayerListener implements Listener {
         }
     }
 
-    private void resetChatSetting(FastPlayer fastPlayer) {
-        fastPlayer.setChatSetKey(false);
-        fastPlayer.getChatTask().cancel();
-    }
-
     @EventHandler
-    public void onPlayerWriteConfigKey(AsyncPlayerChatEvent event) {
+    public void onPlayerChatEvent(AsyncPlayerChatEvent event) {
         Player player = event.getPlayer();
         FastPlayer fastPlayer = FastPluginConfigurer.getFastPlayer(player.getUniqueId());
         String message = event.getMessage();
-        if (!fastPlayer.isChatAddKey()) {
+        if (!fastPlayer.isChatAddKey() && !fastPlayer.isChatSetKey()) {
             return;
         }
         File file = fastPlayer.getFile();
@@ -88,13 +48,12 @@ public class PlayerListener implements Listener {
                 new File(file.getParentFile().getPath()).mkdirs();
                 file.createNewFile();
             } catch (IOException e) {
-                e.printStackTrace();
-                return;
+                throw new RuntimeException(e);
             }
         }
         if (message.equalsIgnoreCase("cancel")) {
-            resetChatSetting(fastPlayer);
-            openLastOpenInventory(fastPlayer, player, file);
+            fastPlayer.setChatSetKey(false);
+            openLastClosedInventory(fastPlayer, player, file);
         }
         String path = fastPlayer.getPath();
         if (path == null) {
@@ -102,10 +61,14 @@ public class PlayerListener implements Listener {
             return;
         }
         YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-        config.set(path.isEmpty() ? message : path + "." + message, "");
+        if (fastPlayer.isChatAddKey()) {
+            config.set(path.isEmpty() ? message : path + "." + message, "");
+        } else if (fastPlayer.isChatSetKey()) {
+            config.set(path, convert(message));
+        }
         FileUtils.reload(config, file);
-        resetChatSetting(fastPlayer);
-        openLastOpenInventory(fastPlayer, player, file);
+        fastPlayer.setChatSetKey(false);
+        openLastClosedInventory(fastPlayer, player, file);
         event.setCancelled(true);
     }
 
