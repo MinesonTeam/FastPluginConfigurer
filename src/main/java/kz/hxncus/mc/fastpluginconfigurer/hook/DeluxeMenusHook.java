@@ -74,7 +74,14 @@ public class DeluxeMenusHook implements Convertible {
         Inventory chestInventory = ((Chest) state).getInventory();
         FileConfiguration config = YamlConfiguration.loadConfiguration(file);
         configureInventory(fileName, config, chestInventory);
-        storeInventoryInConfig(chestInventory, config);
+        int count = 0;
+        for (int i = 0; i < chestInventory.getSize(); i++) {
+            ItemStack item = chestInventory.getItem(i);
+            if (item == null || item.getType() == Material.AIR) {
+                continue;
+            }
+            storeItemInConfig(item, config, count++, i);
+        }
         FileUtils.reload(config, file);
         player.sendMessage("Chest inventory successfully saved into " + fileName);
     }
@@ -89,17 +96,6 @@ public class DeluxeMenusHook implements Convertible {
         config.set("register_command", true);
         config.set("open_command", List.of(fileName));
         config.set("size", chestInventory.getSize());
-    }
-
-    private void storeInventoryInConfig(Inventory chestInventory, FileConfiguration config) {
-        int count = 0;
-        for (int i = 0; i < chestInventory.getSize(); i++) {
-            ItemStack item = chestInventory.getItem(i);
-            if (item == null || item.getType() == Material.AIR) {
-                continue;
-            }
-            storeItemInConfig(item, config, count++, i);
-        }
     }
 
     private void storeItemInConfig(ItemStack item, FileConfiguration config, int count, int i) {

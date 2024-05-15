@@ -45,8 +45,9 @@ public class PlayerListener implements Listener {
         File file = fastPlayer.getFile();
         if (!file.exists()) {
             try {
-                new File(file.getParentFile().getPath()).mkdirs();
-                file.createNewFile();
+                if (new File(file.getParentFile().getPath()).mkdirs()) {
+                    file.createNewFile();
+                }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

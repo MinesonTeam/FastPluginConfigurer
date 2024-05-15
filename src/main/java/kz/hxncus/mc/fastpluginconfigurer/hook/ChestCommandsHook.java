@@ -77,20 +77,16 @@ public class ChestCommandsHook implements Convertible {
         Inventory chestInventory = ((Chest) state).getInventory();
         FileConfiguration config = YamlConfiguration.loadConfiguration(file);
         configureInventory(fileName, config, chestInventory);
-        storeInventoryInConfig(chestInventory, config);
-        FileUtils.reload(config, file);
-        player.sendMessage("Chest inventory successfully saved into " + fileName);
-    }
-
-    private void storeInventoryInConfig(Inventory chestInventory, FileConfiguration config) {
         int count = 0;
         for (int i = 0; i < chestInventory.getSize(); i++) {
             ItemStack item = chestInventory.getItem(i);
             if (item == null || item.getType() == Material.AIR) {
                 continue;
             }
-            setItemToConfig(item, config, count++, i);
+            storeItemInConfig(item, config, count++, i);
         }
+        FileUtils.reload(config, file);
+        player.sendMessage("Chest inventory successfully saved into " + fileName);
     }
 
     private void configureInventory(String fileName, FileConfiguration config, Inventory chestInventory) {
@@ -104,7 +100,7 @@ public class ChestCommandsHook implements Convertible {
         return MenuManager.getMenuFileNames().stream().map(CaseInsensitiveString::toString).collect(Collectors.toList());
     }
 
-    private void setItemToConfig(ItemStack item, FileConfiguration config, int count, int i) {
+    private void storeItemInConfig(ItemStack item, FileConfiguration config, int count, int i) {
         ItemMeta itemMeta = item.getItemMeta();
         config.set(count + ".ACTIONS", List.of(""));
         if (itemMeta.hasDisplayName()) {

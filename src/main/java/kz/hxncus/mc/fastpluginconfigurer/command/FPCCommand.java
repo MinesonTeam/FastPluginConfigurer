@@ -24,10 +24,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.plugin.Plugin;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class FPCCommand extends DefaultCommand {
@@ -41,26 +38,13 @@ public class FPCCommand extends DefaultCommand {
             sender.sendMessage("You must be a player to execute this command.");
             return;
         }
-        if (args.length == 0) {
-            sendHelpMessage(sender, label);
-            return;
-        }
-        String args0 = args[0].toLowerCase();
-        if (args.length == 1) {
-            sendHelpMessage(sender, label);
-            return;
-        }
-        switch (args0) {
+        switch (args[0].toLowerCase(Locale.US)) {
             case Constants.INVENTORY_TO_FILE:
             case Constants.FILE_TO_INVENTORY:
-                if (args.length == 2) {
-                    sendHelpMessage(sender, label);
-                    return;
-                }
-                inventorySubCommand(sender, args0, args);
+                inventorySubCommand(sender, label, args);
                 break;
             case Constants.CONFIG:
-                configSubCommand((HumanEntity) sender, args);
+                configSubCommand((HumanEntity) sender, label, args);
                 break;
             default:
                 sendHelpMessage(sender, label);
@@ -68,8 +52,11 @@ public class FPCCommand extends DefaultCommand {
         }
     }
 
-    private void inventorySubCommand(CommandSender sender, String args0, String... args) {
-        String args2 = args[2];
+    private void inventorySubCommand(CommandSender sender, String label, String... args) {
+        if (args.length < 2) {
+            sendHelpMessage(sender, label);
+            return;
+        }
         Convertible converter = null;
         for (Converters converters : Converters.values()) {
             Convertible convertible = converters.getConverter();
@@ -83,14 +70,18 @@ public class FPCCommand extends DefaultCommand {
             return;
         }
         Player player = (Player) sender;
-        if (args0.equals(Constants.INVENTORY_TO_FILE)) {
-            converter.inventoryToFile(player, args2);
-        } else if (args0.equals(Constants.FILE_TO_INVENTORY)) {
-            converter.fileToInventory(player, args2);
+        if (args[0].equalsIgnoreCase(Constants.INVENTORY_TO_FILE)) {
+            converter.inventoryToFile(player, args[2]);
+        } else if (args[0].equalsIgnoreCase(Constants.FILE_TO_INVENTORY)) {
+            converter.fileToInventory(player, args[2]);
         }
     }
 
-    public void configSubCommand(HumanEntity humanEntity, String... args) {
+    public void configSubCommand(HumanEntity humanEntity, String label, String... args) {
+        if (args.length < 2) {
+            sendHelpMessage(humanEntity, label);
+            return;
+        }
         Plugin targetPlugin = Bukkit.getPluginManager().getPlugin(args[1]);
         if (targetPlugin == null) {
             humanEntity.sendMessage("This plugin doesn't exist.");
@@ -118,30 +109,24 @@ public class FPCCommand extends DefaultCommand {
 
     private void setupConfigInventories(Iterator<String> iterator, FastInventory inventory, ConfigurationSection section, String lastPluginName) {
         while (iterator.hasNext()) {
-            String path = iterator.next();
             if (inventory.firstEmpty() > 44) {
-                FastInventory fastInventory = new BasicFastInventory(plugin, 54, lastPluginName);
-                fastInventory.addClickHandler(event -> event.setCancelled(true));
-
-                setNextAndPreviousPages(inventory, fastInventory);
-
+                FastInventory fastInventory = createFastInventory(lastPluginName);
+                inventory.setItem(53, new ItemBuilder(Material.ARROW).setDisplayName("Next page").build(), event -> fastInventory.open(event.getWhoClicked()));
+                fastInventory.setItem(45, new ItemBuilder(Material.ARROW).setDisplayName("Previous page").build(), event -> inventory.open(event.getWhoClicked()));
                 setupConfigInventories(iterator, fastInventory, section, lastPluginName);
-                break;
+                return;
             }
-            setupKey(lastPluginName, inventory, section, path);
+            setupKey(lastPluginName, inventory, section, iterator.next());
         }
-        if (inventory.firstEmpty() <= 44) {
+        if (inventory.firstEmpty() < 45) {
             addNewKeyItem(inventory, section.getCurrentPath());
         }
     }
 
-    private void setNextAndPreviousPages(FastInventory currentInv, FastInventory nextInv) {
-        currentInv.setItem(53, new ItemBuilder(Material.ARROW).setDisplayName("Next page").build(), event -> nextInv.open(event.getWhoClicked()));
-        setPreviousPage(nextInv, currentInv);
-    }
-    
-    private void setPreviousPage(FastInventory currentInv, FastInventory previousInv) {
-        currentInv.setItem(45, new ItemBuilder(Material.ARROW).setDisplayName("Previous page").build(), event -> previousInv.open(event.getWhoClicked()));
+    private FastInventory createFastInventory(String title) {
+        FastInventory fastInventory = new BasicFastInventory(plugin, 54, title);
+        fastInventory.addClickHandler(event -> event.setCancelled(true));
+        return fastInventory;
     }
     
     private void addNewKeyItem(FastInventory inventory, String currentPath) {
@@ -161,12 +146,11 @@ public class FPCCommand extends DefaultCommand {
         String currentPath = section.getCurrentPath();
         String fullPath = StringUtils.isEmpty(currentPath) ? path : currentPath + "." + path;
         if (sections != null) {
-            FastInventory fastInventory = new BasicFastInventory(plugin, 54, lastPluginName);
-            fastInventory.addClickHandler(event -> event.setCancelled(true));
+            FastInventory fastInventory = createFastInventory(lastPluginName);
             inventory.addItem(new ItemBuilder(Material.OAK_SIGN).setDisplayName("§fSection: §e" + path)
-                    .addLore(Constants.CONFIG_SECTION_LORE)
+                    .addLore(Constants.SECTION_LORE)
                     .build(), event -> onSectionClick(event, fastInventory, fullPath));
-            setPreviousPage(fastInventory, inventory);
+            fastInventory.setItem(45, new ItemBuilder(Material.ARROW).setDisplayName("Previous page").build(), event -> inventory.open(event.getWhoClicked()));
             setupConfigInventories(sections.getKeys(false).iterator(), fastInventory, sections, lastPluginName);
             return;
         }
@@ -176,7 +160,7 @@ public class FPCCommand extends DefaultCommand {
     private void addKeyItemToInventory(FastInventory inventory, Object value, String fullPath) {
         inventory.addItem(new ItemBuilder(getMaterialFromValue(value)).setDisplayName("§fKey: §e" + fullPath)
                                                                       .addLore("§7Current value:", " §8▪ §e" + (StringUtils.isEmpty(value.toString()) ? "§o§mempty value" : value))
-                                                                      .addLore(Constants.CONFIG_ITEM_LORE).setAmount((value instanceof Number) ? ((Number) value).intValue() : 1)
+                                                                      .addLore(Constants.ITEM_LORE).setAmount((value instanceof Number) ? ((Number) value).intValue() : 1)
                                                                       .build(), event -> onItemClick(event, fullPath, value.toString()));
     }
 

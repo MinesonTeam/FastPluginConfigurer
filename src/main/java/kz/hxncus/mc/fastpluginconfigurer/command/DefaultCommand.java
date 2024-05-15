@@ -9,6 +9,7 @@ import org.bukkit.command.PluginCommand;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 public abstract class DefaultCommand implements FastCommand {
     public final FastPluginConfigurer plugin;
@@ -38,7 +39,7 @@ public abstract class DefaultCommand implements FastCommand {
         String last = args[args.length - 1];
         List<String> result = new ArrayList<>();
         for (final String arg : list) {
-            if (arg.toLowerCase().startsWith(last.toLowerCase())) {
+            if (arg.toLowerCase(Locale.US).startsWith(last.toLowerCase(Locale.US))) {
                 result.add(arg);
             }
         }

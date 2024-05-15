@@ -18,19 +18,23 @@ public class FastPlayer {
     private BukkitTask chatTask;
     private File file;
 
+    public void cancelTask() {
+        chatTask.cancel();
+    }
+
     public void setChatSetKey(boolean chatSetKey, Plugin plugin) {
         this.chatSetKey = chatSetKey;
         if (chatSetKey) {
             setChatTask(Bukkit.getScheduler().runTaskLater(plugin, () -> setChatSetKey(false), 1200L));
         } else {
-            getChatTask().cancel();
+            cancelTask();
         }
     }
 
     public void setChatSetKey(boolean chatSetKey) {
         this.chatSetKey = chatSetKey;
         if (!chatSetKey) {
-            getChatTask().cancel();
+            cancelTask();
         }
     }
 
@@ -39,14 +43,14 @@ public class FastPlayer {
         if (chatAddKey) {
             setChatTask(Bukkit.getScheduler().runTaskLater(plugin, () -> setChatSetKey(false), 1200L));
         } else {
-            getChatTask().cancel();
+            cancelTask();
         }
     }
 
     public void setChatAddKey(boolean chatAddKey) {
         this.chatSetKey = chatAddKey;
         if (!chatAddKey) {
-            getChatTask().cancel();
+            cancelTask();
         }
     }
 }

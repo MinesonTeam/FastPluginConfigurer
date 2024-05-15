@@ -16,21 +16,22 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Getter
 public final class FastPluginConfigurer extends JavaPlugin {
     @Getter
     private static FastPluginConfigurer instance;
+    private static final Map<UUID, FastPlayer> PLAYER_MAP = new ConcurrentHashMap<>();
+    private final InventoryItemMarker itemMarker = new InventoryItemMarker(this);
+    private InventoryManager inventoryManager;
     private DeluxeMenusHook deluxeMenusHook;
     private ChestCommandsHook chestCommandsHook;
     private BetterGUIHook betterguiHook;
     private ZMenuHook zMenuHook;
     private File converterDirectory;
-    private final InventoryItemMarker itemMarker = new InventoryItemMarker(this);
-    private static final Map<UUID, FastPlayer> PLAYER_MAP = new HashMap<>();
 
     public static FastPlayer getFastPlayer(final UUID uuid) {
         return PLAYER_MAP.computeIfAbsent(uuid, FastPlayer::new);
@@ -47,6 +48,7 @@ public final class FastPluginConfigurer extends JavaPlugin {
     @Override
     public void onEnable() {
         registerDirectories();
+        registerManagers();
         registerConverters(Bukkit.getPluginManager());
         registerEvents(Bukkit.getPluginManager());
         registerCommands();
@@ -54,7 +56,11 @@ public final class FastPluginConfigurer extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        InventoryManager.getInstance().closeAll();
+        inventoryManager.closeAll();
+    }
+
+    private void registerManagers() {
+        inventoryManager = new InventoryManager();
     }
 
     private void registerConverters(PluginManager pluginManager) {
@@ -86,7 +92,7 @@ public final class FastPluginConfigurer extends JavaPlugin {
     }
 
     private void registerEvents(PluginManager pluginManager) {
-        pluginManager.registerEvents(InventoryManager.getInstance(), this);
+        pluginManager.registerEvents(inventoryManager, this);
         pluginManager.registerEvents(new DupeFixer(this), this);
         pluginManager.registerEvents(new PlayerListener(this), this);
     }

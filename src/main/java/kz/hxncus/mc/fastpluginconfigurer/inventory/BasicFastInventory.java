@@ -50,16 +50,12 @@ public class BasicFastInventory implements FastInventory {
     public BasicFastInventory(FastPluginConfigurer plugin, @NonNull Inventory inventory) {
         this.plugin = plugin;
         this.inventory = inventory;
-        registerInventory();
+        plugin.getInventoryManager().register(inventory, this);
         Bukkit.getScheduler().runTaskLater(plugin, this::onInitialize, 1L);
     }
 
-    public void registerInventory() {
-        InventoryManager.getInstance().register(inventory, this);
-    }
-
     public void unregisterInventory() {
-        InventoryManager.getInstance().unregister(inventory);
+        plugin.getInventoryManager().unregister(inventory);
     }
 
     public int firstEmpty() {

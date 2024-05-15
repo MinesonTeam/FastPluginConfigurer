@@ -23,7 +23,6 @@ public interface FastInventory {
     FastInventory addClickHandler(Consumer<InventoryClickEvent> clickHandler);
     FastInventory addCloseHandler(Consumer<InventoryCloseEvent> closeHandler);
     FastInventory addOpenHandler(Consumer<InventoryOpenEvent> openHandler);
-    void registerInventory();
     void unregisterInventory();
     void open(HumanEntity entity);
     int addItem(ItemStack item);
