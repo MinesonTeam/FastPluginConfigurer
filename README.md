@@ -1,6 +1,8 @@
 
 # README
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/2eab614d2f8247798dab370c1122b265)](https://app.codacy.com/gh/Hxncusik/FastPluginConfigurer?utm_source=github.com&utm_medium=referral&utm_content=Hxncusik/FastPluginConfigurer&utm_campaign=Badge_Grade)
+
 ## About
 
 FastPluginConfigurer is a ultimate plugin that speeds up plugin customization.
