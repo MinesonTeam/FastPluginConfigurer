@@ -28,16 +28,16 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ZMenuHook implements Convertible {
-    private final FastPluginConfigurer plugin;
+    public final FastPluginConfigurer plugin;
 
     public ZMenuHook(final FastPluginConfigurer plugin) {
         this.plugin = plugin;
     }
 
     @Override
-    public void fileToInventory(final Player player, final String fileName) {
-        final Block targetBlock = player.getTargetBlockExact(5);
-        final BlockState state;
+    public void fileToInventory(Player player, String fileName) {
+        Block targetBlock = player.getTargetBlockExact(5);
+        BlockState state;
         if (targetBlock == null) {
             state = null;
         } else {
@@ -52,12 +52,11 @@ public class ZMenuHook implements Convertible {
         if (inventory.isEmpty()) {
             player.sendMessage(String.format("Menu not found: %s", fileName));
         } else {
-            Inventory chestInventory = ((Chest) state).getInventory();
-            storeConfigInInventory(player, chestInventory, (ZInventory) inventory.get());
+            storeConfigInInventory(player, ((Chest) state).getInventory(), (ZInventory) inventory.get());
         }
     }
 
-    private void storeConfigInInventory(final Player player, final Inventory chestInventory, final ZInventory inventory) {
+    private void storeConfigInInventory(Player player, Inventory chestInventory, ZInventory inventory) {
         chestInventory.clear();
         final ArrayList<Button> buttons = new ArrayList<>(inventory.getButtons());
         for (Pattern pattern : inventory.getPatterns()) {
@@ -77,14 +76,14 @@ public class ZMenuHook implements Convertible {
     }
 
     @Override
-    public void inventoryToFile(final Player player, final String fileName) {
-        final File file = new File(plugin.getConverterDirectory(), fileName.endsWith(".yml") ? fileName : fileName + ".yml");
+    public void inventoryToFile(Player player, String fileName) {
+        File file = new File(plugin.getConverterDirectory(), fileName.endsWith(".yml") ? fileName : fileName + ".yml");
         if (file.exists()) {
             player.sendMessage("File is already exists: " + fileName);
             return;
         }
-        final Block targetBlock = player.getTargetBlockExact(5);
-        final BlockState state = targetBlock == null ? null : targetBlock.getState();
+        Block targetBlock = player.getTargetBlockExact(5);
+        BlockState state = targetBlock == null ? null : targetBlock.getState();
         if (!(state instanceof Chest)) {
             player.sendMessage("You must be looking at a double chest to execute this command.");
         } else {
@@ -103,28 +102,35 @@ public class ZMenuHook implements Convertible {
             player.sendMessage("Chest inventory successfully saved into " + fileName);
         }
     }
-    private void configureInventory(final String fileName, final FileConfiguration config, final Inventory chestInventory) {
+    private void configureInventory(String fileName, FileConfiguration config, Inventory chestInventory) {
         config.set("name", fileName);
         config.set("size", chestInventory.getSize());
     }
 
-    private void storeItemInConfig(final ItemStack item, final FileConfiguration config, final int count, final int i) {
+    private void storeItemInConfig(ItemStack item, FileConfiguration config, int count, int index) {
         String path = String.format("items.%s.", count);
         ItemMeta itemMeta = item.getItemMeta();
         config.set(path + "item.material", item.getType().name());
         config.set(path + "item.amount", item.getAmount());
+        config.set(path + "slot", index);
+        if (itemMeta == null) {
+            return;
+        }
         if (itemMeta.hasDisplayName()) {
             config.set(path + "item.name", itemMeta.getDisplayName());
+        } else {
+            config.set(path + "item.name", itemMeta.getLocalizedName());
         }
         if (itemMeta.hasLore()) {
             config.set(path + "item.lore", itemMeta.getLore());
         }
-        config.set(path + "slot", i);
         if (itemMeta.hasEnchants()) {
-            Stream<String> stringStream = itemMeta.getEnchants().entrySet().stream()
+            Stream<String> stringStream = itemMeta.getEnchants()
+                                                  .entrySet()
+                                                  .stream()
                                                   .map(entry -> String.format("%s;%s",
-                                                                entry.getKey().getKey().getKey(),
-                                                                entry.getValue()));
+                                                      entry.getKey().getKey().getKey(),
+                                                      entry.getValue()));
             config.set(path + "enchantments", stringStream.collect(Collectors.toList()));
         }
     }

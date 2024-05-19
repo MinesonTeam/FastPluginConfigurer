@@ -1,4 +1,4 @@
-package kz.hxncus.mc.fastpluginconfigurer.inventory.marker;
+package kz.hxncus.mc.fastpluginconfigurer.inventory.dupefixer.marker;
 
 import org.bukkit.inventory.ItemStack;
 

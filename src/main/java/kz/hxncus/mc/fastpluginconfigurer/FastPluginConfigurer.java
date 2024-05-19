@@ -2,13 +2,9 @@ package kz.hxncus.mc.fastpluginconfigurer;
 
 import kz.hxncus.mc.fastpluginconfigurer.command.FPCCommand;
 import kz.hxncus.mc.fastpluginconfigurer.fast.FastPlayer;
-import kz.hxncus.mc.fastpluginconfigurer.hook.BetterGUIHook;
-import kz.hxncus.mc.fastpluginconfigurer.hook.ChestCommandsHook;
-import kz.hxncus.mc.fastpluginconfigurer.hook.DeluxeMenusHook;
-import kz.hxncus.mc.fastpluginconfigurer.hook.ZMenuHook;
-import kz.hxncus.mc.fastpluginconfigurer.inventory.DupeFixer;
+import kz.hxncus.mc.fastpluginconfigurer.hook.HookManager;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.InventoryManager;
-import kz.hxncus.mc.fastpluginconfigurer.inventory.marker.InventoryItemMarker;
+import kz.hxncus.mc.fastpluginconfigurer.inventory.dupefixer.DupeFixer;
 import kz.hxncus.mc.fastpluginconfigurer.listener.PlayerListener;
 import lombok.Getter;
 import org.bukkit.Bukkit;
@@ -25,12 +21,8 @@ public final class FastPluginConfigurer extends JavaPlugin {
     @Getter
     private static FastPluginConfigurer instance;
     private static final Map<UUID, FastPlayer> PLAYER_MAP = new ConcurrentHashMap<>();
-    private final InventoryItemMarker itemMarker = new InventoryItemMarker(this);
-    private InventoryManager inventoryManager;
-    private DeluxeMenusHook deluxeMenusHook;
-    private ChestCommandsHook chestCommandsHook;
-    private BetterGUIHook betterguiHook;
-    private ZMenuHook zMenuHook;
+    private final InventoryManager inventoryManager = new InventoryManager(this);
+    private final HookManager hookManager = new HookManager(this);
     private File converterDirectory;
 
     public static FastPlayer getFastPlayer(final UUID uuid) {
@@ -48,8 +40,7 @@ public final class FastPluginConfigurer extends JavaPlugin {
     @Override
     public void onEnable() {
         registerDirectories();
-        registerManagers();
-        registerConverters(Bukkit.getPluginManager());
+        hookManager.registerHooks(Bukkit.getPluginManager());
         registerEvents(Bukkit.getPluginManager());
         registerCommands();
     }
@@ -59,31 +50,8 @@ public final class FastPluginConfigurer extends JavaPlugin {
         inventoryManager.closeAll();
     }
 
-    private void registerManagers() {
-        inventoryManager = new InventoryManager();
-    }
-
-    private void registerConverters(PluginManager pluginManager) {
-        if (pluginManager.getPlugin("deluxemenus") != null) {
-            deluxeMenusHook = new DeluxeMenusHook(this);
-            getLogger().info("Hook DeluxeMenus is enabled successfully.");
-        }
-        if (pluginManager.getPlugin("chestcommands") != null) {
-            chestCommandsHook = new ChestCommandsHook(this);
-            getLogger().info("Hook ChestCommands is enabled successfully.");
-        }
-        if (pluginManager.getPlugin("bettergui") != null) {
-            betterguiHook = new BetterGUIHook(this);
-            getLogger().info("Hook BetterGUI is enabled successfully.");
-        }
-        if (pluginManager.getPlugin("zmenu") != null) {
-            zMenuHook = new ZMenuHook(this);
-            getLogger().info("Hook zMenu is enabled successfully.");
-        }
-    }
-
     private void registerCommands() {
-        new FPCCommand(this);
+        new FPCCommand(instance);
     }
 
     private void registerDirectories() {
@@ -92,8 +60,8 @@ public final class FastPluginConfigurer extends JavaPlugin {
     }
 
     private void registerEvents(PluginManager pluginManager) {
-        pluginManager.registerEvents(inventoryManager, this);
-        pluginManager.registerEvents(new DupeFixer(this), this);
-        pluginManager.registerEvents(new PlayerListener(this), this);
+        pluginManager.registerEvents(inventoryManager, instance);
+        pluginManager.registerEvents(new DupeFixer(instance, inventoryManager), instance);
+        pluginManager.registerEvents(new PlayerListener(instance), instance);
     }
 }

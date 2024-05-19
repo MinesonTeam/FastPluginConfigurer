@@ -1,5 +1,8 @@
 package kz.hxncus.mc.fastpluginconfigurer.inventory;
 
+import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
+import kz.hxncus.mc.fastpluginconfigurer.inventory.dupefixer.marker.InventoryItemMarker;
+import lombok.Getter;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -9,49 +12,51 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.inventory.Inventory;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
+@Getter
 public final class InventoryManager implements Listener {
-    private final Map<Inventory, FastInventory> inventories = new HashMap<>();
+    private final Map<Inventory, FastInventory> inventories = new ConcurrentHashMap<>();
+    private final InventoryItemMarker itemMarker;
+
+    public InventoryManager(FastPluginConfigurer plugin) {
+        this.itemMarker = new InventoryItemMarker(plugin);
+    }
 
     public void register(Inventory inventory, FastInventory handler) {
         inventories.put(inventory, handler);
     }
 
-    public void unregister(Inventory inventory) {
-        inventories.remove(inventory);
-    }
-
     @EventHandler
     public void handleDrag(InventoryDragEvent event) {
-        FastInventory handler = inventories.get(event.getInventory());
-        if (handler != null) {
-            handler.handleDrag(event);
+        FastInventory inventory = inventories.get(event.getInventory());
+        if (inventory != null) {
+            inventory.handleDrag(event);
         }
     }
 
     @EventHandler
     public void handleClick(InventoryClickEvent event) {
-        FastInventory handler = inventories.get(event.getInventory());
-        if (handler != null) {
-            handler.handleClick(event);
+        FastInventory inventory = inventories.get(event.getInventory());
+        if (inventory != null) {
+            inventory.handleClick(event);
         }
     }
 
     @EventHandler
     public void handleClose(InventoryCloseEvent event) {
-        FastInventory handler = inventories.get(event.getInventory());
-        if (handler != null && handler.handleClose(event)) {
-            handler.open(event.getPlayer());
+        FastInventory inventory = inventories.get(event.getInventory());
+        if (inventory != null && inventory.handleClose(event)) {
+            event.getPlayer().openInventory(inventory.getInventory());
         }
     }
 
     @EventHandler
     public void handleOpen(InventoryOpenEvent event) {
-        FastInventory handler = inventories.get(event.getInventory());
-        if (handler != null) {
-            handler.handleOpen(event);
+        FastInventory inventory = inventories.get(event.getInventory());
+        if (inventory != null) {
+            inventory.handleOpen(event);
         }
     }
 

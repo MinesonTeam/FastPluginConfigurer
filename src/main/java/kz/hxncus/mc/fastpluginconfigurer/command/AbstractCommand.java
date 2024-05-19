@@ -11,12 +11,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
-public abstract class DefaultCommand implements FastCommand {
+public abstract class AbstractCommand implements FastCommand {
     public final FastPluginConfigurer plugin;
 
-    protected DefaultCommand(FastPluginConfigurer plugin, String command) {
+    protected AbstractCommand(FastPluginConfigurer plugin, String command) {
         this.plugin = plugin;
-        PluginCommand pluginCommand = plugin.getCommand(command);
+        PluginCommand pluginCommand = this.plugin.getCommand(command);
         if (pluginCommand != null) {
             pluginCommand.setExecutor(this);
             pluginCommand.setTabCompleter(this);
@@ -24,18 +24,20 @@ public abstract class DefaultCommand implements FastCommand {
     }
 
     @Override
-    public boolean onCommand(@NonNull CommandSender sender, @NonNull Command command, @NonNull String label, @NonNull final String... args) {
+    public boolean onCommand(@NonNull CommandSender sender, @NonNull Command command, @NonNull String label, @NonNull String... args) {
         execute(sender, command, label, args);
         return true;
     }
 
     @Override
-    public List<String> onTabComplete(@NonNull CommandSender sender, @NonNull Command command, @NonNull String alias, @NonNull final String... args) {
+    public List<String> onTabComplete(@NonNull CommandSender sender, @NonNull Command command, @NonNull String alias, @NonNull String... args) {
         return filter(complete(sender, command, args), args);
     }
 
     private List<String> filter(List<String> list, String... args) {
-        if (list == null) return Collections.emptyList();
+        if (list == null) {
+            return Collections.emptyList();
+        }
         String last = args[args.length - 1];
         List<String> result = new ArrayList<>();
         for (final String arg : list) {

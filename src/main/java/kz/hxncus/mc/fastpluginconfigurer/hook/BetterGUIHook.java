@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class BetterGUIHook implements Convertible {
-    private final FastPluginConfigurer plugin;
+    public final FastPluginConfigurer plugin;
 
     public BetterGUIHook(FastPluginConfigurer plugin) {
         this.plugin = plugin;
@@ -38,7 +38,12 @@ public class BetterGUIHook implements Convertible {
     @Override
     public void fileToInventory(Player player, String fileName) {
         Block targetBlock = player.getTargetBlockExact(5);
-        BlockState state = targetBlock == null ? null : targetBlock.getState();
+        BlockState state;
+        if (targetBlock == null) {
+            state = null;
+        } else {
+            state = targetBlock.getState();
+        }
         if (!(state instanceof Chest)) {
             player.sendMessage("You must be looking at a double chest to execute this command.");
             return;
@@ -46,9 +51,9 @@ public class BetterGUIHook implements Convertible {
         Menu menu = BetterGUI.getInstance().getMenuManager().getMenu(fileName);
         if (!(menu instanceof SimpleMenu)) {
             player.sendMessage("Menu not found: " + fileName);
-            return;
+        } else {
+            storeConfigItemsInInventory(player, ((Chest) state).getInventory(), ((SimpleMenu) menu).getButtonMap());
         }
-        storeConfigItemsInInventory(player, ((Chest) state).getInventory(), ((SimpleMenu) menu).getButtonMap());
     }
 
     private void storeConfigItemsInInventory(Player player, Inventory chestInventory, SimpleButtonMap buttonMap) {
@@ -102,11 +107,13 @@ public class BetterGUIHook implements Convertible {
         config.set("menu-settings.command", fileName);
     }
 
-    private void storeItemInConfig(ItemStack item, FileConfiguration config, int count, int i) {
+    private void storeItemInConfig(ItemStack item, FileConfiguration config, int count, int index) {
         ItemMeta itemMeta = item.getItemMeta();
         if (itemMeta != null) {
             if (itemMeta.hasDisplayName()) {
                 config.set(count + ".NAME", itemMeta.getDisplayName());
+            } else {
+                config.set(count + ".NAME", itemMeta.getLocalizedName());
             }
             if (itemMeta.hasLore()) {
                 config.set(count + ".LORE", itemMeta.getLore());
@@ -119,8 +126,8 @@ public class BetterGUIHook implements Convertible {
         }
         config.set(count + ".ID", item.getType().name() + (item.getDurability() != 0 ? "" : ":" + item.getDurability()));
         config.set(count + ".AMOUNT", item.getAmount());
-        config.set(count + ".POSITION-X", i % 9 + 1);
-        config.set(count + ".POSITION-Y", i / 9 + 1);
+        config.set(count + ".POSITION-X", index % 9 + 1);
+        config.set(count + ".POSITION-Y", index / 9 + 1);
     }
 
     @Override

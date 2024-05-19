@@ -24,7 +24,7 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 public class DeluxeMenusHook implements Convertible {
-    private final FastPluginConfigurer plugin;
+    public final FastPluginConfigurer plugin;
 
     public DeluxeMenusHook(FastPluginConfigurer plugin) {
         this.plugin = plugin;
@@ -33,7 +33,12 @@ public class DeluxeMenusHook implements Convertible {
     @Override
     public void fileToInventory(Player player, String fileName) {
         Block targetBlock = player.getTargetBlockExact(5);
-        BlockState state = targetBlock == null ? null : targetBlock.getState();
+        BlockState state;
+        if (targetBlock == null) {
+            state = null;
+        } else {
+            state = targetBlock.getState();
+        }
         if (!(state instanceof Chest)) {
             player.sendMessage("You must be looking at a double chest to execute this command.");
             return;
@@ -41,9 +46,9 @@ public class DeluxeMenusHook implements Convertible {
         Menu menu = Menu.getMenu(fileName);
         if (menu == null) {
             player.sendMessage("Menu not found: " + fileName);
-            return;
+        } else {
+            storeConfigItemsInInventory(player, ((Chest) state).getInventory(), menu);
         }
-        storeConfigItemsInInventory(player, ((Chest) state).getInventory(), menu);
     }
 
     private void storeConfigItemsInInventory(Player player, Inventory chestInventory, Menu menu) {
@@ -98,7 +103,7 @@ public class DeluxeMenusHook implements Convertible {
         config.set("size", chestInventory.getSize());
     }
 
-    private void storeItemInConfig(ItemStack item, FileConfiguration config, int count, int i) {
+    private void storeItemInConfig(ItemStack item, FileConfiguration config, int count, int index) {
         String path = String.format("items.%s.", count);
         ItemMeta itemMeta = item.getItemMeta();
         config.set(path + "material", item.getType().name());
@@ -112,7 +117,7 @@ public class DeluxeMenusHook implements Convertible {
         if (itemMeta.hasLore()) {
             config.set(path + "lore", itemMeta.getLore());
         }
-        config.set(path + "slot", i);
+        config.set(path + "slot", index);
         if (itemMeta.hasEnchants()) {
             config.set(path + "enchantments", itemMeta.getEnchants().entrySet().stream().map(entry -> entry.getKey().getName() + ";" + entry.getValue()).collect(Collectors.toList()));
         }

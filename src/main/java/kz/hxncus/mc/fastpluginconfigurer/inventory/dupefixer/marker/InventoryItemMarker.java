@@ -1,4 +1,4 @@
-package kz.hxncus.mc.fastpluginconfigurer.inventory.marker;
+package kz.hxncus.mc.fastpluginconfigurer.inventory.dupefixer.marker;
 
 import kz.hxncus.mc.fastpluginconfigurer.util.ItemBuilder;
 import lombok.NonNull;

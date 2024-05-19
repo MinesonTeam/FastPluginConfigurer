@@ -17,6 +17,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.File;
@@ -24,7 +25,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ChestCommandsHook implements Convertible {
-    private final FastPluginConfigurer plugin;
+    public final FastPluginConfigurer plugin;
 
     public ChestCommandsHook(FastPluginConfigurer plugin) {
         this.plugin = plugin;
@@ -33,7 +34,12 @@ public class ChestCommandsHook implements Convertible {
     @Override
     public void fileToInventory(Player player, String fileName) {
         Block targetBlock = player.getTargetBlockExact(5);
-        BlockState state = targetBlock == null ? null : targetBlock.getState();
+        BlockState state;
+        if (targetBlock == null) {
+            state = null;
+        } else {
+            state = targetBlock.getState();
+        }
         if (!(state instanceof Chest)) {
             player.sendMessage("You must be looking at a double chest to execute this command.");
             return;
@@ -41,9 +47,9 @@ public class ChestCommandsHook implements Convertible {
         BaseMenu menu = MenuManager.getMenuByFileName(fileName);
         if (menu == null) {
             player.sendMessage("Menu not found: " + fileName);
-            return;
+        } else {
+            storeConfigItemsInInventory(player, ((Chest) state).getInventory(), menu.getIcons());
         }
-        storeConfigItemsInInventory(player, ((Chest) state).getInventory(), menu.getIcons());
     }
 
     private void storeConfigItemsInInventory(Player player, Inventory chestInventory, Grid<Icon> icons) {
@@ -100,27 +106,34 @@ public class ChestCommandsHook implements Convertible {
         return MenuManager.getMenuFileNames().stream().map(CaseInsensitiveString::toString).collect(Collectors.toList());
     }
 
-    private void storeItemInConfig(ItemStack item, FileConfiguration config, int count, int i) {
+    private void storeItemInConfig(ItemStack item, FileConfiguration config, int count, int index) {
         ItemMeta itemMeta = item.getItemMeta();
         config.set(count + ".ACTIONS", List.of(""));
-        if (itemMeta.hasDisplayName()) {
-            config.set(count + ".NAME", itemMeta.getDisplayName());
-        }
-        if (itemMeta.hasLore()) {
-            config.set(count + ".LORE", itemMeta.getLore());
-        }
-        if (item.getDurability() != 0) {
-            config.set(count + ".DURATION", item.getDurability());
-        }
-        if (itemMeta.hasEnchants()) {
-            config.set(count + ".ENCHANTMENTS", itemMeta.getEnchants().entrySet().stream()
-                                                        .map(entry -> entry.getKey().getName() + ", " + entry.getValue())
-                                                        .collect(Collectors.toList()));
+        if (itemMeta != null) {
+            if (itemMeta.hasDisplayName()) {
+                config.set(count + ".NAME", itemMeta.getDisplayName());
+            } else {
+                config.set(count + ".NAME", itemMeta.getLocalizedName());
+            }
+            if (itemMeta.hasLore()) {
+                config.set(count + ".LORE", itemMeta.getLore());
+            }
+            if (itemMeta instanceof Damageable && ((Damageable) itemMeta).hasDamage()) {
+                config.set(count + ".DURATION", ((Damageable) itemMeta).getDamage());
+            }
+            if (itemMeta.hasEnchants()) {
+                config.set(count + ".ENCHANTMENTS", itemMeta.getEnchants()
+                                                            .entrySet()
+                                                            .stream()
+                                                            .map(entry -> entry.getKey()
+                                                                               .getName() + ", " + entry.getValue())
+                                                            .collect(Collectors.toList()));
+            }
         }
         config.set(count + ".AMOUNT", item.getAmount());
         config.set(count + ".MATERIAL", item.getType().name());
         config.set(count + ".KEEP-OPEN", true);
-        config.set(count + ".POSITION-X", i % 9 + 1);
-        config.set(count + ".POSITION-Y", i / 9 + 1);
+        config.set(count + ".POSITION-X", index % 9 + 1);
+        config.set(count + ".POSITION-Y", index / 9 + 1);
     }
 }

@@ -1,7 +1,8 @@
-package kz.hxncus.mc.fastpluginconfigurer.inventory;
+package kz.hxncus.mc.fastpluginconfigurer.inventory.dupefixer;
 
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
-import kz.hxncus.mc.fastpluginconfigurer.inventory.marker.InventoryItemMarker;
+import kz.hxncus.mc.fastpluginconfigurer.inventory.InventoryManager;
+import kz.hxncus.mc.fastpluginconfigurer.inventory.dupefixer.marker.InventoryItemMarker;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Item;
@@ -17,9 +18,9 @@ import org.bukkit.inventory.PlayerInventory;
 public class DupeFixer implements Listener {
     private final FastPluginConfigurer plugin;
     private final InventoryItemMarker inventoryItemMarker;
-    public DupeFixer(FastPluginConfigurer plugin) {
+    public DupeFixer(FastPluginConfigurer plugin, InventoryManager inventoryManager) {
         this.plugin = plugin;
-        this.inventoryItemMarker = plugin.getItemMarker();
+        this.inventoryItemMarker = inventoryManager.getItemMarker();
     }
 
     @EventHandler

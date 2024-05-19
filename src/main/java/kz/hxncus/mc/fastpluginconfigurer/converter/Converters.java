@@ -5,10 +5,10 @@ import lombok.Getter;
 
 @Getter
 public enum Converters {
-    ZMENU("zmenu", FastPluginConfigurer.getInstance().getZMenuHook()),
-    CHESTCOMMANDS("chestcommands", FastPluginConfigurer.getInstance().getChestCommandsHook()),
-    DELUXEMENUS("deluxemenus", FastPluginConfigurer.getInstance().getDeluxeMenusHook()),
-    BETTERGUI("bettergui", FastPluginConfigurer.getInstance().getBetterguiHook());
+    ZMENU("zmenu", FastPluginConfigurer.getInstance().getHookManager().getZMenuHook()),
+    CHESTCOMMANDS("chestcommands", FastPluginConfigurer.getInstance().getHookManager().getChestCommandsHook()),
+    DELUXEMENUS("deluxemenus", FastPluginConfigurer.getInstance().getHookManager().getDeluxeMenusHook()),
+    BETTERGUI("bettergui", FastPluginConfigurer.getInstance().getHookManager().getBetterGUIHook());
 
     private final String name;
     private final Convertible converter;

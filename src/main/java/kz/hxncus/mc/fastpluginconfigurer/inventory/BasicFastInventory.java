@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.*;
 import org.bukkit.inventory.Inventory;
@@ -54,68 +53,47 @@ public class BasicFastInventory implements FastInventory {
         Bukkit.getScheduler().runTaskLater(plugin, this::onInitialize, 1L);
     }
 
-    public void unregisterInventory() {
-        plugin.getInventoryManager().unregister(inventory);
-    }
-
-    public int firstEmpty() {
-        return inventory.firstEmpty();
-    }
-
     @NonNull
     public int addItem(ItemStack item) {
         int slot = this.inventory.firstEmpty();
         if (slot != -1) {
-            return setItem(slot, item);
+            setItem(slot, item);
         }
         return slot;
     }
 
     @NonNull
     public int addItem(ItemStack item, Consumer<InventoryClickEvent> handler) {
-        setItemClickHandler(inventory.firstEmpty(), handler);
+        setItem(inventory.firstEmpty(), handler);
         return addItem(item);
     }
 
-    public ItemStack getItem(int slot) {
-        return this.inventory.getItem(slot);
-    }
-
-    public ItemStack @NonNull [] getContents() {
-        return this.inventory.getContents();
-    }
-
-    public int getSize() {
-        return this.inventory.getSize();
-    }
-
-    public ItemStack @NonNull [] getItems(int slotFrom, int slotTo) {
+    public ItemStack @NonNull[] getItems(int slotFrom, int slotTo) {
         if (slotFrom >= slotTo) {
             throw new IllegalArgumentException("slotFrom must be less than slotTo");
         }
-        ItemStack[] items = new ItemStack[slotTo - slotFrom + 1]; // 20
-        for (int i = slotFrom ; i <= slotTo; i++) { // 0; i <= 20
-            items[i - slotFrom] = getItem(i);
+        ItemStack[] items = new ItemStack[slotTo - slotFrom + 1];
+        for (int i = slotFrom ; i <= slotTo; i++) {
+            items[i - slotFrom] = inventory.getItem(i);
         }
         return items;
     }
 
-    public ItemStack @NonNull [] getItems(int @NonNull... slots) {
+    public ItemStack @NonNull[] getItems(int @NonNull... slots) {
         ItemStack[] items = new ItemStack[slots.length];
         for (int i = 0; i < slots.length; i++) {
-            items[i] = getItem(slots[i]);
+            items[i] = inventory.getItem(slots[i]);
         }
         return items;
     }
 
     @NonNull
-    public int setItem(int slot, ItemStack item) {
-        this.inventory.setItem(slot, marking ? plugin.getItemMarker().markItem(item) : item);
-        return slot;
+    public void setItem(int slot, ItemStack item) {
+        this.inventory.setItem(slot, marking ? plugin.getInventoryManager().getItemMarker().markItem(item) : item);
     }
 
     @NonNull
-    public void setItemClickHandler(int slot, Consumer<InventoryClickEvent> handler) {
+    public void setItem(int slot, Consumer<InventoryClickEvent> handler) {
         if (handler != null) {
             this.itemClickHandlers.put(slot, handler);
         } else {
@@ -124,12 +102,12 @@ public class BasicFastInventory implements FastInventory {
     }
 
     @NonNull
-    public BasicFastInventory setItems(int slotFrom, int slotTo, ItemStack item) {
+    public FastInventory setItems(int slotFrom, int slotTo, ItemStack item) {
         return setItems(slotFrom, slotTo, item, null);
     }
 
     @NonNull
-    public BasicFastInventory setItems(int slotFrom, int slotTo, ItemStack item, Consumer<InventoryClickEvent> handler) {
+    public FastInventory setItems(int slotFrom, int slotTo, ItemStack item, Consumer<InventoryClickEvent> handler) {
         for (int i = slotFrom; i <= slotTo; i++) {
             setItem(i, item, handler);
         }
@@ -137,12 +115,12 @@ public class BasicFastInventory implements FastInventory {
     }
 
     @NonNull
-    public BasicFastInventory setItems(ItemStack item, int @NonNull ... slots) {
+    public FastInventory setItems(ItemStack item, int @NonNull... slots) {
         return setItems(item, null, slots);
     }
 
     @NonNull
-    public BasicFastInventory setItems(ItemStack item, Consumer<InventoryClickEvent> handler, int @NonNull ... slots) {
+    public FastInventory setItems(ItemStack item, Consumer<InventoryClickEvent> handler, int @NonNull... slots) {
         for (int slot : slots) {
             setItem(slot, item, handler);
         }
@@ -150,13 +128,13 @@ public class BasicFastInventory implements FastInventory {
     }
 
     @NonNull
-    public int setItem(int slot, ItemStack item, Consumer<InventoryClickEvent> handler) {
-        setItemClickHandler(slot, handler);
-        return setItem(slot, item);
+    public void setItem(int slot, ItemStack item, Consumer<InventoryClickEvent> handler) {
+        setItem(slot, handler);
+        setItem(slot, item);
     }
 
     @NonNull
-    public BasicFastInventory removeItems(int @NonNull ... slots) {
+    public FastInventory removeItems(int @NonNull... slots) {
         for (int slot : slots) {
             removeItem(slot);
         }
@@ -164,7 +142,7 @@ public class BasicFastInventory implements FastInventory {
     }
 
     @NonNull
-    public BasicFastInventory removeItems(int slotFrom, int slotTo) {
+    public FastInventory removeItems(int slotFrom, int slotTo) {
         for (int i = slotFrom; i <= slotTo; i++) {
             removeItem(i);
         }
@@ -172,78 +150,58 @@ public class BasicFastInventory implements FastInventory {
     }
 
     @NonNull
-    public BasicFastInventory removeItem(int slot) {
+    public FastInventory removeItem(int slot) {
         this.inventory.clear(slot);
         this.itemClickHandlers.remove(slot);
         return this;
     }
 
     @NonNull
-    public BasicFastInventory clear() {
-        this.inventory.clear();
-        return this;
-    }
-
-    @NonNull
-    public BasicFastInventory setCloseFilter(Predicate<Player> closeFilter) {
+    public FastInventory setCloseFilter(Predicate<Player> closeFilter) {
         this.closeFilter = closeFilter;
         return this;
     }
 
     @Override
-    public BasicFastInventory addDragHandler(Consumer<InventoryDragEvent> dragHandler) {
+    public FastInventory addDragHandler(Consumer<InventoryDragEvent> dragHandler) {
         dragHandlers.add(dragHandler);
         return this;
     }
 
     @NonNull
-    public BasicFastInventory addOpenHandler(Consumer<InventoryOpenEvent> openHandler) {
+    public FastInventory addOpenHandler(Consumer<InventoryOpenEvent> openHandler) {
         openHandlers.add(openHandler);
         return this;
     }
 
     @NonNull
-    public BasicFastInventory addCloseHandler(Consumer<InventoryCloseEvent> closeHandler) {
+    public FastInventory addCloseHandler(Consumer<InventoryCloseEvent> closeHandler) {
         closeHandlers.add(closeHandler);
         return this;
     }
 
     @NonNull
-    public BasicFastInventory addClickHandler(Consumer<InventoryClickEvent> clickHandler) {
+    public FastInventory addClickHandler(Consumer<InventoryClickEvent> clickHandler) {
         clickHandlers.add(clickHandler);
         return this;
     }
 
-    public void open(HumanEntity entity) {
-        entity.openInventory(inventory);
-    }
-
-    @NonNull
-    public Inventory getInventory() {
-        return this.inventory;
-    }
-
-    @Override
     public void onInitialize() {
         // Basic inventory initialization
     }
 
-    @Override
     public void onDrag(InventoryDragEvent event) {
         // Basic inventory drag
     }
 
-    @Override
     public void onClick(InventoryClickEvent event) {
         // Basic inventory click
     }
 
-    @Override
     public void onClose(InventoryCloseEvent event) {
         // Basic inventory close
     }
 
-    @Override
     public void onOpen(InventoryOpenEvent event) {
         // Basic inventory open
     }
@@ -266,11 +224,8 @@ public class BasicFastInventory implements FastInventory {
 
     public void handleClick(InventoryClickEvent event) {
         onClick(event);
-
         this.clickHandlers.forEach(click -> click.accept(event));
-
         Consumer<InventoryClickEvent> clickConsumer = this.itemClickHandlers.get(event.getRawSlot());
-
         if (clickConsumer != null) {
             clickConsumer.accept(event);
         }
