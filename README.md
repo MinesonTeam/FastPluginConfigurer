@@ -12,4 +12,4 @@ The [issues](https://github.com/Hxncusik/FastPluginConfigurer/issues) section is
 ## Badges
 
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/fbd269d62fcd4f07b8cf7a758f7cc316)](https://app.codacy.com/gh/Hxncusik/FastPluginConfigurer/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
-![GITHUB-STATS](https://github-readme-stats.vercel.app/api?username=imfoxter&show_icons=true&theme=tokyonight)
+![GITHUB-STATS](https://github-readme-stats.vercel.app/api?username=hxncusik&show_icons=true&theme=tokyonight)
