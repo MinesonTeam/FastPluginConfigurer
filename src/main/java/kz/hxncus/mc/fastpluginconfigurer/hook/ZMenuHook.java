@@ -5,6 +5,7 @@ import fr.maxlego08.menu.ZInventory;
 import fr.maxlego08.menu.api.InventoryManager;
 import fr.maxlego08.menu.api.button.Button;
 import fr.maxlego08.menu.api.pattern.Pattern;
+import kz.hxncus.mc.fastpluginconfigurer.Constants;
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
 import kz.hxncus.mc.fastpluginconfigurer.converter.Convertible;
 import kz.hxncus.mc.fastpluginconfigurer.util.FileUtils;
@@ -37,14 +38,9 @@ public class ZMenuHook implements Convertible {
     @Override
     public void fileToInventory(Player player, String fileName) {
         Block targetBlock = player.getTargetBlockExact(5);
-        BlockState state;
-        if (targetBlock == null) {
-            state = null;
-        } else {
-            state = targetBlock.getState();
-        }
+        BlockState state = targetBlock == null ? null : targetBlock.getState();
         if (!(state instanceof Chest)) {
-            player.sendMessage("You must be looking at a double chest to execute this command.");
+            player.sendMessage(Constants.MUST_LOOKING_AT_DOUBLE_CHEST);
             return;
         }
         InventoryManager manager = MenuPlugin.getInstance().getInventoryManager();
@@ -101,7 +97,7 @@ public class ZMenuHook implements Convertible {
             player.sendMessage("Chest inventory successfully saved into " + fileName);
             return;
         }
-        player.sendMessage("You must be looking at a double chest to execute this command.");
+        player.sendMessage(Constants.MUST_LOOKING_AT_DOUBLE_CHEST);
     }
     private void configureInventory(String fileName, FileConfiguration config, Inventory chestInventory) {
         config.set("name", fileName);

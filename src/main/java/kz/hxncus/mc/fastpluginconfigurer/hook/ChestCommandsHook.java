@@ -1,5 +1,6 @@
 package kz.hxncus.mc.fastpluginconfigurer.hook;
 
+import kz.hxncus.mc.fastpluginconfigurer.Constants;
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
 import kz.hxncus.mc.fastpluginconfigurer.converter.Convertible;
 import kz.hxncus.mc.fastpluginconfigurer.util.FileUtils;
@@ -34,14 +35,9 @@ public class ChestCommandsHook implements Convertible {
     @Override
     public void fileToInventory(Player player, String fileName) {
         Block targetBlock = player.getTargetBlockExact(5);
-        BlockState state;
-        if (targetBlock == null) {
-            state = null;
-        } else {
-            state = targetBlock.getState();
-        }
+        BlockState state = targetBlock == null ? null : targetBlock.getState();
         if (!(state instanceof Chest)) {
-            player.sendMessage("You must be looking at a double chest to execute this command.");
+            player.sendMessage(Constants.MUST_LOOKING_AT_DOUBLE_CHEST);
             return;
         }
         BaseMenu menu = MenuManager.getMenuByFileName(fileName);
@@ -77,7 +73,7 @@ public class ChestCommandsHook implements Convertible {
         Block targetBlock = player.getTargetBlockExact(5);
         BlockState state = targetBlock == null ? null : targetBlock.getState();
         if (!(state instanceof Chest)) {
-            player.sendMessage("You must be looking at a double chest to execute this command.");
+            player.sendMessage(Constants.MUST_LOOKING_AT_DOUBLE_CHEST);
             return;
         }
         Inventory chestInventory = ((Chest) state).getInventory();

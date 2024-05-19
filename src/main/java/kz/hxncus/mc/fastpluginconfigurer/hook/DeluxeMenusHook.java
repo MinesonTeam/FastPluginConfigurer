@@ -3,6 +3,7 @@ package kz.hxncus.mc.fastpluginconfigurer.hook;
 import com.extendedclip.deluxemenus.menu.Menu;
 import com.extendedclip.deluxemenus.menu.MenuHolder;
 import com.extendedclip.deluxemenus.menu.MenuItem;
+import kz.hxncus.mc.fastpluginconfigurer.Constants;
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
 import kz.hxncus.mc.fastpluginconfigurer.converter.Convertible;
 import kz.hxncus.mc.fastpluginconfigurer.util.FileUtils;
@@ -33,14 +34,9 @@ public class DeluxeMenusHook implements Convertible {
     @Override
     public void fileToInventory(Player player, String fileName) {
         Block targetBlock = player.getTargetBlockExact(5);
-        BlockState state;
-        if (targetBlock == null) {
-            state = null;
-        } else {
-            state = targetBlock.getState();
-        }
+        BlockState state = targetBlock == null ? null : targetBlock.getState();
         if (!(state instanceof Chest)) {
-            player.sendMessage("You must be looking at a double chest to execute this command.");
+            player.sendMessage(Constants.MUST_LOOKING_AT_DOUBLE_CHEST);
             return;
         }
         Menu menu = Menu.getMenu(fileName);
@@ -65,7 +61,8 @@ public class DeluxeMenusHook implements Convertible {
 
     @Override
     public void inventoryToFile(Player player, String fileName) {
-        File file = new File(plugin.getConverterDirectory(), fileName.endsWith(".yml") ? fileName : fileName + ".yml");
+        String expansion = ".yml";
+        File file = new File(plugin.getConverterDirectory(), fileName.endsWith(expansion) ? fileName : fileName + expansion);
         if (file.exists()) {
             player.sendMessage("File is already exists: " + fileName);
             return;
@@ -73,7 +70,7 @@ public class DeluxeMenusHook implements Convertible {
         Block targetBlock = player.getTargetBlockExact(5);
         BlockState state = targetBlock == null ? null : targetBlock.getState();
         if (!(state instanceof Chest)) {
-            player.sendMessage("You must be looking at a double chest to execute this command.");
+            player.sendMessage(Constants.MUST_LOOKING_AT_DOUBLE_CHEST);
             return;
         }
         Inventory chestInventory = ((Chest) state).getInventory();

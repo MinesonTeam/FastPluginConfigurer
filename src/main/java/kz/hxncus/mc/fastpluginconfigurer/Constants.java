@@ -16,6 +16,9 @@ public class Constants {
     public final String CONFIG = "config";
     public final String INVENTORY_TO_FILE = "inventorytofile";
     public final String FILE_TO_INVENTORY = "filetoinventory";
+
+    public final String MUST_LOOKING_AT_DOUBLE_CHEST = "You must be looking at a double chest to execute this command.";
+
     public final ItemStack NEXT_PAGE_ITEM = new ItemBuilder(Material.ARROW).setDisplayName("Next page").build();
     public final ItemStack PREVIOUS_PAGE_ITEM = new ItemBuilder(Material.ARROW).setDisplayName("Previous page").build();
     public final ItemStack ADD_NEW_KEY_ITEM = new ItemBuilder(Material.NETHER_STAR).setDisplayName("§fClick to add a new key").build();

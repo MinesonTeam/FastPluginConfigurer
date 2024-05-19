@@ -1,5 +1,6 @@
 package kz.hxncus.mc.fastpluginconfigurer.hook;
 
+import kz.hxncus.mc.fastpluginconfigurer.Constants;
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
 import kz.hxncus.mc.fastpluginconfigurer.converter.Convertible;
 import kz.hxncus.mc.fastpluginconfigurer.util.FileUtils;
@@ -38,22 +39,17 @@ public class BetterGUIHook implements Convertible {
     @Override
     public void fileToInventory(Player player, String fileName) {
         Block targetBlock = player.getTargetBlockExact(5);
-        BlockState state;
-        if (targetBlock == null) {
-            state = null;
-        } else {
-            state = targetBlock.getState();
-        }
+        BlockState state = targetBlock == null ? null : targetBlock.getState();
         if (!(state instanceof Chest)) {
-            player.sendMessage("You must be looking at a double chest to execute this command.");
+            player.sendMessage(Constants.MUST_LOOKING_AT_DOUBLE_CHEST);
             return;
         }
         Menu menu = BetterGUI.getInstance().getMenuManager().getMenu(fileName);
-        if (!(menu instanceof SimpleMenu)) {
-            player.sendMessage("Menu not found: " + fileName);
-        } else {
+        if (menu instanceof SimpleMenu) {
             storeConfigItemsInInventory(player, ((Chest) state).getInventory(), ((SimpleMenu) menu).getButtonMap());
+            return;
         }
+        player.sendMessage("Menu not found: " + fileName);
     }
 
     private void storeConfigItemsInInventory(Player player, Inventory chestInventory, SimpleButtonMap buttonMap) {
@@ -75,7 +71,8 @@ public class BetterGUIHook implements Convertible {
 
     @Override
     public void inventoryToFile(Player player, String fileName) {
-        File file = new File(plugin.getConverterDirectory(), fileName.endsWith(".yml") ? fileName : fileName + ".yml");
+        String expansion = ".yml";
+        File file = new File(plugin.getConverterDirectory(), fileName.endsWith(expansion) ? fileName : fileName + expansion);
         if (file.exists()) {
             player.sendMessage("File is already exists: " + fileName);
             return;
@@ -83,7 +80,7 @@ public class BetterGUIHook implements Convertible {
         Block targetBlock = player.getTargetBlockExact(5);
         BlockState state = targetBlock == null ? null : targetBlock.getState();
         if (!(state instanceof Chest)) {
-            player.sendMessage("You must be looking at a double chest to execute this command.");
+            player.sendMessage(Constants.MUST_LOOKING_AT_DOUBLE_CHEST);
             return;
         }
         Inventory chestInventory = ((Chest) state).getInventory();
@@ -110,10 +107,11 @@ public class BetterGUIHook implements Convertible {
     private void storeItemInConfig(ItemStack item, FileConfiguration config, int count, int index) {
         ItemMeta itemMeta = item.getItemMeta();
         if (itemMeta != null) {
+            String itemNamePath = count + ".NAME";
             if (itemMeta.hasDisplayName()) {
-                config.set(count + ".NAME", itemMeta.getDisplayName());
+                config.set(itemNamePath, itemMeta.getDisplayName());
             } else {
-                config.set(count + ".NAME", itemMeta.getLocalizedName());
+                config.set(itemNamePath, itemMeta.getLocalizedName());
             }
             if (itemMeta.hasLore()) {
                 config.set(count + ".LORE", itemMeta.getLore());
@@ -124,7 +122,7 @@ public class BetterGUIHook implements Convertible {
                                                            .collect(Collectors.toList()));
             }
         }
-        config.set(count + ".ID", item.getType().name() + (item.getDurability() != 0 ? "" : ":" + item.getDurability()));
+        config.set(count + ".ID", String.format("%s%s", item.getType().name(), item.getDurability() == 0 ? "" : ":" + item.getDurability()));
         config.set(count + ".AMOUNT", item.getAmount());
         config.set(count + ".POSITION-X", index % 9 + 1);
         config.set(count + ".POSITION-Y", index / 9 + 1);

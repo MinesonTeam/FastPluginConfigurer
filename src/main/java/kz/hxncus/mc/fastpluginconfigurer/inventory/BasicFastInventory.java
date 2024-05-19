@@ -11,9 +11,9 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -21,7 +21,7 @@ import java.util.function.Predicate;
 public class BasicFastInventory implements FastInventory {
     private final FastPluginConfigurer plugin;
     private final Inventory inventory;
-    private final Map<Integer, Consumer<InventoryClickEvent>> itemClickHandlers = new HashMap<>();
+    private final Map<Integer, Consumer<InventoryClickEvent>> itemClickHandlers = new ConcurrentHashMap<>();
     private final List<Consumer<InventoryDragEvent>> dragHandlers = new ArrayList<>();
     private final List<Consumer<InventoryOpenEvent>> openHandlers = new ArrayList<>();
     private final List<Consumer<InventoryCloseEvent>> closeHandlers = new ArrayList<>();
@@ -102,6 +102,12 @@ public class BasicFastInventory implements FastInventory {
     }
 
     @NonNull
+    public void setItem(int slot, ItemStack item, Consumer<InventoryClickEvent> handler) {
+        setItem(slot, handler);
+        setItem(slot, item);
+    }
+
+    @NonNull
     public FastInventory setItems(int slotFrom, int slotTo, ItemStack item, Consumer<InventoryClickEvent> handler) {
         for (int i = slotFrom; i <= slotTo; i++) {
             setItem(i, item, handler);
@@ -125,12 +131,6 @@ public class BasicFastInventory implements FastInventory {
     @NonNull
     public FastInventory setItems(ItemStack item, int @NonNull... slots) {
         return setItems(item, null, slots);
-    }
-
-    @NonNull
-    public void setItem(int slot, ItemStack item, Consumer<InventoryClickEvent> handler) {
-        setItem(slot, handler);
-        setItem(slot, item);
     }
 
     @NonNull

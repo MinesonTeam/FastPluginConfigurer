@@ -170,7 +170,7 @@ public class FPCCommand extends AbstractCommand {
     private void addKeyItemToInventory(FastInventory inventory, Object value, String fullPath) {
         inventory.addItem(new ItemBuilder(getMaterialFromValue(value)).setDisplayName("§fKey: §e" + fullPath)
                                                                       .addLore("§7Current value:", " §8▪ §e" + (StringUtils.isEmpty(value.toString()) ? "§o§mempty value" : value))
-                                                                      .addLore(Constants.ITEM_LORE).setAmount((value instanceof Integer) ? (Integer) value : 1)
+                                                                      .addLore(Constants.ITEM_LORE).setAmount(value instanceof Integer ? (Integer) value : 1)
                                                                       .build(), event -> onItemClick(event, fullPath, value.toString()));
     }
 
