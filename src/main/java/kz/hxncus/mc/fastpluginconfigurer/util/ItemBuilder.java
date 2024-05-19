@@ -35,7 +35,7 @@ public class ItemBuilder {
         return setLore(Collections.singletonList(lore));
     }
 
-    public ItemBuilder setLore(String ... lore) {
+    public ItemBuilder setLore(String... lore) {
         return setLore(Arrays.asList(lore));
     }
 

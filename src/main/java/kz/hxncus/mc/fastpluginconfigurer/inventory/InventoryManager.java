@@ -1,7 +1,7 @@
 package kz.hxncus.mc.fastpluginconfigurer.inventory;
 
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
-import kz.hxncus.mc.fastpluginconfigurer.inventory.dupefixer.marker.InventoryItemMarker;
+import kz.hxncus.mc.fastpluginconfigurer.inventory.marker.InventoryItemMarker;
 import lombok.Getter;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.EventHandler;

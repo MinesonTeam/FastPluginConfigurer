@@ -1,4 +1,4 @@
-package kz.hxncus.mc.fastpluginconfigurer.inventory.dupefixer.marker;
+package kz.hxncus.mc.fastpluginconfigurer.inventory.marker;
 
 import kz.hxncus.mc.fastpluginconfigurer.util.ItemBuilder;
 import lombok.NonNull;
@@ -27,8 +27,9 @@ public class InventoryItemMarker implements ItemMarker {
 
     public boolean isItemMarked(@NonNull org.bukkit.inventory.ItemStack itemStack) {
         ItemMeta itemMeta = itemStack.getItemMeta();
-        if (itemMeta == null)
+        if (itemMeta == null) {
             return false;
+        }
         PersistentDataContainer container = itemMeta.getPersistentDataContainer();
         return container.has(markKey, PersistentDataType.BYTE);
     }

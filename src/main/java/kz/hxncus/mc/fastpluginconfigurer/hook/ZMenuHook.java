@@ -77,16 +77,15 @@ public class ZMenuHook implements Convertible {
 
     @Override
     public void inventoryToFile(Player player, String fileName) {
-        File file = new File(plugin.getConverterDirectory(), fileName.endsWith(".yml") ? fileName : fileName + ".yml");
+        String expansion = ".yml";
+        File file = new File(plugin.getConverterDirectory(), fileName.endsWith(expansion) ? fileName : fileName + expansion);
         if (file.exists()) {
             player.sendMessage("File is already exists: " + fileName);
             return;
         }
         Block targetBlock = player.getTargetBlockExact(5);
         BlockState state = targetBlock == null ? null : targetBlock.getState();
-        if (!(state instanceof Chest)) {
-            player.sendMessage("You must be looking at a double chest to execute this command.");
-        } else {
+        if (state instanceof Chest) {
             Inventory chestInventory = ((Chest) state).getInventory();
             FileConfiguration config = YamlConfiguration.loadConfiguration(file);
             configureInventory(fileName, config, chestInventory);
@@ -100,7 +99,9 @@ public class ZMenuHook implements Convertible {
             }
             FileUtils.reload(config, file);
             player.sendMessage("Chest inventory successfully saved into " + fileName);
+            return;
         }
+        player.sendMessage("You must be looking at a double chest to execute this command.");
     }
     private void configureInventory(String fileName, FileConfiguration config, Inventory chestInventory) {
         config.set("name", fileName);
@@ -109,17 +110,18 @@ public class ZMenuHook implements Convertible {
 
     private void storeItemInConfig(ItemStack item, FileConfiguration config, int count, int index) {
         String path = String.format("items.%s.", count);
-        ItemMeta itemMeta = item.getItemMeta();
         config.set(path + "item.material", item.getType().name());
         config.set(path + "item.amount", item.getAmount());
         config.set(path + "slot", index);
+        ItemMeta itemMeta = item.getItemMeta();
         if (itemMeta == null) {
             return;
         }
+        String itemNamePath = "item.name";
         if (itemMeta.hasDisplayName()) {
-            config.set(path + "item.name", itemMeta.getDisplayName());
+            config.set(path + itemNamePath, itemMeta.getDisplayName());
         } else {
-            config.set(path + "item.name", itemMeta.getLocalizedName());
+            config.set(path + itemNamePath, itemMeta.getLocalizedName());
         }
         if (itemMeta.hasLore()) {
             config.set(path + "item.lore", itemMeta.getLore());

@@ -105,12 +105,12 @@ public class DeluxeMenusHook implements Convertible {
 
     private void storeItemInConfig(ItemStack item, FileConfiguration config, int count, int index) {
         String path = String.format("items.%s.", count);
-        ItemMeta itemMeta = item.getItemMeta();
         config.set(path + "material", item.getType().name());
         if (item.getData().getData() != 0) {
             config.set(path + "data", item.getData().getData());
         }
         config.set(path + "amount", item.getAmount());
+        ItemMeta itemMeta = item.getItemMeta();
         if (itemMeta.hasDisplayName()) {
             config.set(path + "display_name", itemMeta.getDisplayName());
         }
@@ -119,7 +119,7 @@ public class DeluxeMenusHook implements Convertible {
         }
         config.set(path + "slot", index);
         if (itemMeta.hasEnchants()) {
-            config.set(path + "enchantments", itemMeta.getEnchants().entrySet().stream().map(entry -> entry.getKey().getName() + ";" + entry.getValue()).collect(Collectors.toList()));
+            config.set(path + "enchantments", itemMeta.getEnchants().entrySet().stream().map(entry -> entry.getKey().getKey().getKey() + ";" + entry.getValue()).collect(Collectors.toList()));
         }
     }
 }

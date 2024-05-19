@@ -73,7 +73,7 @@ public class BasicFastInventory implements FastInventory {
             throw new IllegalArgumentException("slotFrom must be less than slotTo");
         }
         ItemStack[] items = new ItemStack[slotTo - slotFrom + 1];
-        for (int i = slotFrom ; i <= slotTo; i++) {
+        for (int i = slotFrom; i <= slotTo; i++) {
             items[i - slotFrom] = inventory.getItem(i);
         }
         return items;
@@ -102,11 +102,6 @@ public class BasicFastInventory implements FastInventory {
     }
 
     @NonNull
-    public FastInventory setItems(int slotFrom, int slotTo, ItemStack item) {
-        return setItems(slotFrom, slotTo, item, null);
-    }
-
-    @NonNull
     public FastInventory setItems(int slotFrom, int slotTo, ItemStack item, Consumer<InventoryClickEvent> handler) {
         for (int i = slotFrom; i <= slotTo; i++) {
             setItem(i, item, handler);
@@ -115,8 +110,8 @@ public class BasicFastInventory implements FastInventory {
     }
 
     @NonNull
-    public FastInventory setItems(ItemStack item, int @NonNull... slots) {
-        return setItems(item, null, slots);
+    public FastInventory setItems(int slotFrom, int slotTo, ItemStack item) {
+        return setItems(slotFrom, slotTo, item, null);
     }
 
     @NonNull
@@ -125,6 +120,11 @@ public class BasicFastInventory implements FastInventory {
             setItem(slot, item, handler);
         }
         return this;
+    }
+
+    @NonNull
+    public FastInventory setItems(ItemStack item, int @NonNull... slots) {
+        return setItems(item, null, slots);
     }
 
     @NonNull

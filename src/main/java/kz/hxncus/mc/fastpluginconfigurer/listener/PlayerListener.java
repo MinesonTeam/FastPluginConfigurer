@@ -15,8 +15,8 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 public class PlayerListener implements Listener {
@@ -52,7 +52,7 @@ public class PlayerListener implements Listener {
                 throw new RuntimeException(e);
             }
         }
-        if (message.equalsIgnoreCase("cancel")) {
+        if ("cancel".equalsIgnoreCase(message)) {
             fastPlayer.setChatSetKey(false);
             openLastClosedInventory(fastPlayer, player, file);
         }
@@ -74,35 +74,29 @@ public class PlayerListener implements Listener {
     }
 
     private Object convert(String message) {
-        if (message.equals("null")) {
+        if ("null".equalsIgnoreCase(message)) {
             return null;
-        }
-        if (message.startsWith("{") && message.endsWith("}")) {
-            Map<String, Object> objectMap = new HashMap<>();
+        } else if (message.startsWith("{") && message.endsWith("}")) {
+            Map<String, Object> objectMap = new ConcurrentHashMap<>();
             String[] split = message.substring(1, message.length() - 1).split("(?<=^|,)\\s*(?:\\{([^:]+):([^,\\]]+)}|([^:]+):\\[([^]]+)])");
             for (String messages : split) {
                 String[] splitted = messages.split(":");
                 objectMap.put(splitted[0], convert(splitted[1]));
             }
             return objectMap;
-        }
-        if (message.startsWith("[") && message.endsWith("]")) {
+        } else if (message.startsWith("[") && message.endsWith("]")) {
             ArrayList<Object> objects = new ArrayList<>();
             for (String messages : message.substring(1, message.length() - 1).split(", ")) {
                 objects.add(convert(messages));
             }
             return objects;
-        }
-        if ((message.startsWith("\"") && message.endsWith("\"")) || (message.startsWith("'") && message.endsWith("'"))) {
+        } else if (message.startsWith("\"") && message.endsWith("\"") || message.startsWith("'") && message.endsWith("'")) {
             return message.substring(1, message.length() - 1);
-        }
-        if (NumberUtils.isNumber(message)) {
+        } else if (NumberUtils.isNumber(message)) {
             return NumberUtils.createNumber(message);
-        }
-        if (message.equalsIgnoreCase("true")) {
+        } else if ("true".equalsIgnoreCase(message)) {
             return true;
-        }
-        if (message.equalsIgnoreCase("false")) {
+        } else if ("false".equalsIgnoreCase(message)) {
             return false;
         }
         return message;

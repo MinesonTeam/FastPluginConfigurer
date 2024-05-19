@@ -62,7 +62,7 @@ public class FPCCommand extends AbstractCommand {
         Convertible converter = null;
         for (Converters converters : Converters.values()) {
             Convertible convertible = converters.getConverter();
-            if (convertible != null && args[1].equals(converters.getName())) {
+            if (convertible != null && args[1].equalsIgnoreCase(converters.getName())) {
                 converter = convertible;
                 break;
             }
@@ -176,11 +176,15 @@ public class FPCCommand extends AbstractCommand {
 
     private void onSectionClick(InventoryClickEvent event, FastInventory fastInventory, String fullPath) {
         HumanEntity humanEntity = event.getWhoClicked();
-        humanEntity.closeInventory();
         if (!event.getClick().isShiftClick()) {
             humanEntity.openInventory(fastInventory.getInventory());
             return;
         }
+        handlePlayerPathSetting(fullPath, humanEntity);
+    }
+
+    private void handlePlayerPathSetting(String fullPath, HumanEntity humanEntity) {
+        humanEntity.closeInventory();
         FastPlayer player = FastPluginConfigurer.getFastPlayer(humanEntity.getUniqueId());
         player.setChatSetKey(true, plugin);
         player.setPath(fullPath);
@@ -189,20 +193,17 @@ public class FPCCommand extends AbstractCommand {
 
     private void onItemClick(InventoryClickEvent event, String fullPath, String valueString) {
         HumanEntity humanEntity = event.getWhoClicked();
-        if (!event.getClick().isShiftClick()) {
-            humanEntity.closeInventory();
-
-            FastPlayer player = FastPluginConfigurer.getFastPlayer(humanEntity.getUniqueId());
-            player.setChatSetKey(true, plugin);
-            player.setPath(fullPath);
-            humanEntity.sendMessage("Write a value for path §e" + fullPath + "§r in the chat or write \"cancel\" to cancel.");
-        } else if (valueString.length() > 256) {
-            humanEntity.sendMessage("The value is too long to be copied. Please change the value in the config.");
-        } else {
+        if (event.getClick().isShiftClick()) {
+            if (valueString.length() > 256) {
+                humanEntity.sendMessage("The value is too long to be copied. Please change the value in the config.");
+                return;
+            }
             TextComponent textComponent = new TextComponent("Open chat then click this message to copy the value: " + valueString);
             textComponent.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, valueString));
             humanEntity.spigot().sendMessage(textComponent);
+            return;
         }
+        handlePlayerPathSetting(fullPath, humanEntity);
     }
 
     private static Material getMaterialFromValue(Object value) {
@@ -219,9 +220,9 @@ public class FPCCommand extends AbstractCommand {
 
     private void sendHelpMessage(CommandSender sender, String label) {
         sender.sendMessage("FastPluginConfigurer help:");
-        sender.sendMessage("/" + label + " config <plugin> [file_name]");
-        sender.sendMessage("/" + label + " inventorytofile <converter> <file_name>");
-        sender.sendMessage("/" + label + " filetoinventory <converter> <file_name>");
+        sender.sendMessage(String.format("/%s config <plugin> [file_name]", label));
+        sender.sendMessage(String.format("/%s inventorytofile <converter> <file_name>", label));
+        sender.sendMessage(String.format("/%s filetoinventory <converter> <file_name>", label));
     }
 
     @Override
@@ -230,7 +231,7 @@ public class FPCCommand extends AbstractCommand {
         if (length == 1) {
             return List.of(Constants.CONFIG, Constants.INVENTORY_TO_FILE, Constants.FILE_TO_INVENTORY);
         }
-        String args0 = args[0].toLowerCase();
+        String args0 = args[0];
         if (length == 2) {
             return getListAtLength2(args0);
         }
@@ -242,7 +243,7 @@ public class FPCCommand extends AbstractCommand {
     }
 
     private List<String> getListAtLength2(String args0) {
-        if ((args0.equalsIgnoreCase(Constants.INVENTORY_TO_FILE) || args0.equalsIgnoreCase(Constants.FILE_TO_INVENTORY))) {
+        if (args0.equalsIgnoreCase(Constants.INVENTORY_TO_FILE) || args0.equalsIgnoreCase(Constants.FILE_TO_INVENTORY)) {
             return List.of("deluxemenus", "chestcommands", "bettergui", "zmenu");
         } else if (args0.equalsIgnoreCase(Constants.CONFIG)) {
             return Arrays.stream(Bukkit.getPluginManager().getPlugins())
@@ -260,12 +261,17 @@ public class FPCCommand extends AbstractCommand {
                 }
             }
         } else if (args0.equalsIgnoreCase(Constants.CONFIG)) {
-            Plugin targetPlugin = Bukkit.getPluginManager().getPlugin(args1);
-            if (targetPlugin != null) {
-                String[] array = targetPlugin.getDataFolder().list((dir, name) -> name.endsWith(".yml"));
-                if (array != null) {
-                    return Arrays.asList(array);
-                }
+            return getPluginConfigFiles(args1);
+        }
+        return Collections.emptyList();
+    }
+
+    private static List<String> getPluginConfigFiles(String args1) {
+        Plugin targetPlugin = Bukkit.getPluginManager().getPlugin(args1);
+        if (targetPlugin != null) {
+            String[] array = targetPlugin.getDataFolder().list((dir, name) -> name.endsWith(".yml"));
+            if (array != null) {
+                return Arrays.asList(array);
             }
         }
         return Collections.emptyList();
