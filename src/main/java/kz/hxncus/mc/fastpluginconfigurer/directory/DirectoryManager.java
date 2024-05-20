@@ -1,11 +1,13 @@
 package kz.hxncus.mc.fastpluginconfigurer.directory;
 
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.io.File;
 
 @Getter
+@EqualsAndHashCode
 public class DirectoryManager {
     private final FastPluginConfigurer plugin;
     private File converterDirectory;

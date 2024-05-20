@@ -2,7 +2,7 @@ package kz.hxncus.mc.fastpluginconfigurer.listener;
 
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
 import kz.hxncus.mc.fastpluginconfigurer.fast.FastPlayer;
-import kz.hxncus.mc.fastpluginconfigurer.locale.Messages;
+import kz.hxncus.mc.fastpluginconfigurer.language.Messages;
 import kz.hxncus.mc.fastpluginconfigurer.util.FileUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.bukkit.Bukkit;
@@ -68,6 +68,7 @@ public class PlayerListener implements Listener {
             config.set(path, convert(message));
         }
         FileUtils.reload(config, file);
+        fastPlayer.setChatAddKey(false);
         fastPlayer.setChatSetKey(false);
         openLastClosedInventory(fastPlayer, player, file);
         event.setCancelled(true);

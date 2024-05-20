@@ -25,7 +25,10 @@ public class PDCItemMarker implements ItemMarker {
         return new ItemBuilder(itemStack).meta(meta -> meta.getPersistentDataContainer().remove(pdcKey)).build();
     }
 
-    public boolean isItemMarked(@NonNull ItemStack itemStack) {
+    public boolean isItemMarked(ItemStack itemStack) {
+        if (itemStack == null) {
+            return false;
+        }
         ItemMeta itemMeta = itemStack.getItemMeta();
         return itemMeta != null && itemMeta.getPersistentDataContainer().has(pdcKey, PersistentDataType.BYTE);
     }

@@ -1,36 +1,33 @@
-package kz.hxncus.mc.fastpluginconfigurer.locale;
+package kz.hxncus.mc.fastpluginconfigurer.language;
 
 import kz.hxncus.mc.fastpluginconfigurer.Constants;
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 @Getter
-public class LocaleManager {
-    @Getter
-    private static final Set<String> supportedLanguages = new HashSet<>(List.of("en", "ru", "ua"));
+@EqualsAndHashCode
+public class LanguageManager {
     private final FastPluginConfigurer plugin;
-    private FileConfiguration currentLocaleConfig;
+    private FileConfiguration langConfig;
 
-    public LocaleManager(FastPluginConfigurer plugin) {
+    public LanguageManager(FastPluginConfigurer plugin) {
         this.plugin = plugin;
         register(plugin);
     }
 
     private void register(FastPluginConfigurer plugin) {
         String lang = plugin.getConfig().getString("lang");
-        if (StringUtils.isEmpty(lang) || !supportedLanguages.contains(lang)) {
+        if (StringUtils.isEmpty(lang) || !Constants.SUPPORTED_LANGUAGES.contains(lang)) {
             lang = "en";
             plugin.getLogger().severe(Messages.UNKNOWN_LANGUAGE.getFormattedMessage(lang));
         }
         File file = new File(plugin.getDirectoryManager().getLangDirectory() + File.separator + lang + Constants.YML_EXPANSION);
-        currentLocaleConfig = YamlConfiguration.loadConfiguration(file);
+        langConfig = YamlConfiguration.loadConfiguration(file);
     }
 }

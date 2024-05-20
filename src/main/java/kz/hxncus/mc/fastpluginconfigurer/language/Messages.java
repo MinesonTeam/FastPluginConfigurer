@@ -1,12 +1,10 @@
-package kz.hxncus.mc.fastpluginconfigurer.locale;
+package kz.hxncus.mc.fastpluginconfigurer.language;
 
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
-import lombok.Getter;
 import org.bukkit.command.CommandSender;
 
 import java.util.Locale;
 
-@Getter
 public enum Messages {
     CHEST_SUCCESSFULLY_STORED_INTO_FILE, CLICK_MESSAGE_TO_COPY_VALUE, CLICK_TO_ADD_NEW_KEY, CLICK_TO_CHANGE_CURRENT_VALUE, CLICK_TO_OPEN_SECTION,
     CONVERTER_TYPE_DOES_NOT_EXIST, CURRENT_VALUE, EMPTY_VALUE, FILE_ALREADY_EXISTS, HELP, HELP_CONFIG, HELP_FILETOINVENTORY, HELP_INVENTORYTOFILE, INVALID_PATH,
@@ -21,8 +19,8 @@ public enum Messages {
 
     public void updateMessage() {
         message = FastPluginConfigurer.getInstance()
-                                      .getLocaleManager()
-                                      .getCurrentLocaleConfig()
+                                      .getLanguageManager()
+                                      .getLangConfig()
                                       .getString(name().toLowerCase(Locale.ROOT), "");
     }
 
@@ -31,19 +29,11 @@ public enum Messages {
     }
 
     public String getFormattedMessage(Object... args) {
-        return String.format(message, args);
-    }
-
-    public void sendMessage(String message, CommandSender sender) {
-        sender.sendMessage(message.replace("{PREFIX}", PREFIX.message));
-    }
-
-    public void sendMessage(CommandSender sender) {
-        sendMessage(message, sender);
+        return String.format(getMessage(), args);
     }
 
     public void sendMessage(CommandSender sender, Object... args) {
-        sendMessage(getFormattedMessage(args), sender);
+        sender.sendMessage(getFormattedMessage(args));
     }
 
     @Override

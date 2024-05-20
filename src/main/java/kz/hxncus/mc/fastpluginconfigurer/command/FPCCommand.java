@@ -7,7 +7,7 @@ import kz.hxncus.mc.fastpluginconfigurer.converter.Convertible;
 import kz.hxncus.mc.fastpluginconfigurer.fast.FastPlayer;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.BasicFastInventory;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.FastInventory;
-import kz.hxncus.mc.fastpluginconfigurer.locale.Messages;
+import kz.hxncus.mc.fastpluginconfigurer.language.Messages;
 import kz.hxncus.mc.fastpluginconfigurer.material.MaterialValues;
 import kz.hxncus.mc.fastpluginconfigurer.util.BytesUtil;
 import kz.hxncus.mc.fastpluginconfigurer.util.ItemBuilder;
@@ -47,14 +47,15 @@ public class FPCCommand extends AbstractCommand {
         if (!(sender instanceof Player)) {
             Messages.MUST_BE_PLAYER.sendMessage(sender);
             return;
-        }
-        if (args.length < 1) {
+        } else if (args.length < 1) {
             sendHelpMessage(sender, label);
-        } else if (args[0].equalsIgnoreCase(Constants.INVENTORY_TO_FILE) || args[0].equals(Constants.FILE_TO_INVENTORY)) {
+            return;
+        }
+        if (Constants.INVENTORY_TO_FILE.equalsIgnoreCase(args[0]) || Constants.FILE_TO_INVENTORY.equalsIgnoreCase(args[0])) {
             inventorySubCommand(sender, label, args);
-        } else if (args[0].equalsIgnoreCase(Constants.CONFIG)) {
+        } else if (Constants.CONFIG.equalsIgnoreCase(args[0])) {
             configSubCommand((HumanEntity) sender, label, args);
-        } else if (args[0].equalsIgnoreCase("reload")) {
+        } else if (Constants.RELOAD.equalsIgnoreCase(args[0])) {
             plugin.reloadConfig();
             plugin.registerStaff();
             for (Messages messages : Messages.values()) {
@@ -154,7 +155,7 @@ public class FPCCommand extends AbstractCommand {
             FastPlayer player = FastPluginConfigurer.getFastPlayer(humanEntity.getUniqueId());
             player.setChatAddKey(true, plugin);
             player.setPath(currentPath);
-            Messages.WRITE_NEW_KEY_IN_CHAT.sendMessage(humanEntity, StringUtils.isEmpty(currentPath) ? "" : String.format(Messages.PATH.getMessage(), currentPath));
+            Messages.WRITE_NEW_KEY_IN_CHAT.sendMessage(humanEntity, StringUtils.isEmpty(currentPath) ? "" : Messages.PATH.getFormattedMessage(currentPath));
         });
     }
 
@@ -255,7 +256,7 @@ public class FPCCommand extends AbstractCommand {
     public List<String> complete(CommandSender sender, Command command, String... args) {
         int length = args.length;
         if (length == 1) {
-            return List.of("reload", Constants.CONFIG, Constants.INVENTORY_TO_FILE, Constants.FILE_TO_INVENTORY);
+            return List.of(Constants.RELOAD, Constants.CONFIG, Constants.INVENTORY_TO_FILE, Constants.FILE_TO_INVENTORY);
         }
         String args0 = args[0];
         if (length == 2) {

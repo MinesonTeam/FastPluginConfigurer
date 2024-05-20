@@ -3,7 +3,7 @@ package kz.hxncus.mc.fastpluginconfigurer.hook;
 import kz.hxncus.mc.fastpluginconfigurer.Constants;
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
 import kz.hxncus.mc.fastpluginconfigurer.converter.Convertible;
-import kz.hxncus.mc.fastpluginconfigurer.locale.Messages;
+import kz.hxncus.mc.fastpluginconfigurer.language.Messages;
 import kz.hxncus.mc.fastpluginconfigurer.util.FileUtils;
 import me.filoghost.chestcommands.api.Icon;
 import me.filoghost.chestcommands.fcommons.collection.CaseInsensitiveString;

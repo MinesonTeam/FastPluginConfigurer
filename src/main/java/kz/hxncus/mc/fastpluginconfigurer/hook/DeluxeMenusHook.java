@@ -6,7 +6,7 @@ import com.extendedclip.deluxemenus.menu.MenuItem;
 import kz.hxncus.mc.fastpluginconfigurer.Constants;
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
 import kz.hxncus.mc.fastpluginconfigurer.converter.Convertible;
-import kz.hxncus.mc.fastpluginconfigurer.locale.Messages;
+import kz.hxncus.mc.fastpluginconfigurer.language.Messages;
 import kz.hxncus.mc.fastpluginconfigurer.util.FileUtils;
 import org.bukkit.Material;
 import org.bukkit.block.Block;

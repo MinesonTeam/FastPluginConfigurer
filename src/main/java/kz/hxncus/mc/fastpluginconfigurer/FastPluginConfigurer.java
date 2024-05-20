@@ -6,8 +6,8 @@ import kz.hxncus.mc.fastpluginconfigurer.fast.FastPlayer;
 import kz.hxncus.mc.fastpluginconfigurer.hook.HookManager;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.InventoryManager;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.dupefixer.DupeFixer;
+import kz.hxncus.mc.fastpluginconfigurer.language.LanguageManager;
 import kz.hxncus.mc.fastpluginconfigurer.listener.PlayerListener;
-import kz.hxncus.mc.fastpluginconfigurer.locale.LocaleManager;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
@@ -15,7 +15,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -27,7 +26,7 @@ public final class FastPluginConfigurer extends JavaPlugin {
     private InventoryManager inventoryManager;
     private HookManager hookManager;
     private DirectoryManager directoryManager;
-    private LocaleManager localeManager;
+    private LanguageManager languageManager;
 
     public static FastPlayer getFastPlayer(final UUID uuid) {
         return PLAYER_MAP.computeIfAbsent(uuid, FastPlayer::new);
@@ -60,15 +59,14 @@ public final class FastPluginConfigurer extends JavaPlugin {
 
     public void registerManagers(FastPluginConfigurer plugin) {
         directoryManager = new DirectoryManager(plugin);
-        localeManager = new LocaleManager(plugin);
+        languageManager = new LanguageManager(plugin);
         inventoryManager = new InventoryManager(plugin);
         hookManager = new HookManager(plugin);
     }
 
     private void registerFiles(FastPluginConfigurer plugin) {
         saveDefaultConfig();
-        Set<String> languages = LocaleManager.getSupportedLanguages();
-        for (String lang : languages) {
+        for (String lang : Constants.SUPPORTED_LANGUAGES) {
             String filePath = String.format("languages\\%s.yml", lang);
             if (!new File(plugin.getDataFolder(), filePath).exists()) {
                 saveResource(filePath, false);

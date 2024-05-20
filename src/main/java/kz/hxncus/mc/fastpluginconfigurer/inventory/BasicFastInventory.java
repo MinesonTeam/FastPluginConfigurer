@@ -1,6 +1,7 @@
 package kz.hxncus.mc.fastpluginconfigurer.inventory;
 
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -18,6 +19,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 @Getter
+@EqualsAndHashCode
 public class BasicFastInventory implements FastInventory {
     private final FastPluginConfigurer plugin;
     private final Inventory inventory;
@@ -189,43 +191,46 @@ public class BasicFastInventory implements FastInventory {
     public void onInitialize() {
         // Basic inventory initialization
     }
-
     public void onDrag(InventoryDragEvent event) {
         // Basic inventory drag
     }
-
     public void onClick(InventoryClickEvent event) {
         // Basic inventory click
     }
-
     public void onClose(InventoryCloseEvent event) {
         // Basic inventory close
     }
-
     public void onOpen(InventoryOpenEvent event) {
         // Basic inventory open
     }
-
     public void handleDrag(InventoryDragEvent event) {
         onDrag(event);
-        this.dragHandlers.forEach(drag -> drag.accept(event));
+        for (Consumer<InventoryDragEvent> dragHandler : dragHandlers) {
+            dragHandler.accept(event);
+        }
     }
 
     public void handleOpen(InventoryOpenEvent event) {
         onOpen(event);
-        this.openHandlers.forEach(open -> open.accept(event));
+        for (Consumer<InventoryOpenEvent> openHandler : openHandlers) {
+            openHandler.accept(event);
+        }
     }
 
     public boolean handleClose(InventoryCloseEvent event) {
         onClose(event);
-        this.closeHandlers.forEach(close -> close.accept(event));
+        for (Consumer<InventoryCloseEvent> closeHandler : closeHandlers) {
+            closeHandler.accept(event);
+        }
         return this.closeFilter != null && this.closeFilter.test((Player) event.getPlayer());
     }
 
     public void handleClick(InventoryClickEvent event) {
         onClick(event);
-        this.clickHandlers.forEach(click -> click.accept(event));
-        Consumer<InventoryClickEvent> clickConsumer = this.itemClickHandlers.get(event.getRawSlot());
+        for (Consumer<InventoryClickEvent> clickHandler : clickHandlers) {
+            clickHandler.accept(event);
+        }
+        Consumer<InventoryClickEvent> clickConsumer = itemClickHandlers.get(event.getRawSlot());
         if (clickConsumer != null) {
             clickConsumer.accept(event);
         }
