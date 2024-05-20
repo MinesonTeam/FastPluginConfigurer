@@ -1,11 +1,13 @@
 package kz.hxncus.mc.fastpluginconfigurer;
 
 import kz.hxncus.mc.fastpluginconfigurer.command.FPCCommand;
+import kz.hxncus.mc.fastpluginconfigurer.directory.DirectoryManager;
 import kz.hxncus.mc.fastpluginconfigurer.fast.FastPlayer;
 import kz.hxncus.mc.fastpluginconfigurer.hook.HookManager;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.InventoryManager;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.dupefixer.DupeFixer;
 import kz.hxncus.mc.fastpluginconfigurer.listener.PlayerListener;
+import kz.hxncus.mc.fastpluginconfigurer.locale.LocaleManager;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
@@ -13,6 +15,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -21,9 +24,10 @@ public final class FastPluginConfigurer extends JavaPlugin {
     @Getter
     private static FastPluginConfigurer instance;
     private static final Map<UUID, FastPlayer> PLAYER_MAP = new ConcurrentHashMap<>();
-    private final InventoryManager inventoryManager = new InventoryManager(this);
-    private final HookManager hookManager = new HookManager(this);
-    private File converterDirectory;
+    private InventoryManager inventoryManager;
+    private HookManager hookManager;
+    private DirectoryManager directoryManager;
+    private LocaleManager localeManager;
 
     public static FastPlayer getFastPlayer(final UUID uuid) {
         return PLAYER_MAP.computeIfAbsent(uuid, FastPlayer::new);
@@ -39,10 +43,14 @@ public final class FastPluginConfigurer extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        registerDirectories();
-        hookManager.registerHooks(Bukkit.getPluginManager());
-        registerEvents(Bukkit.getPluginManager());
-        registerCommands();
+        registerStaff();
+    }
+
+    public void registerStaff() {
+        registerFiles(instance);
+        registerManagers(instance);
+        registerEvents(Bukkit.getPluginManager(), instance);
+        registerCommands(instance);
     }
 
     @Override
@@ -50,18 +58,31 @@ public final class FastPluginConfigurer extends JavaPlugin {
         inventoryManager.closeAll();
     }
 
-    private void registerCommands() {
-        new FPCCommand(instance);
+    public void registerManagers(FastPluginConfigurer plugin) {
+        directoryManager = new DirectoryManager(plugin);
+        localeManager = new LocaleManager(plugin);
+        inventoryManager = new InventoryManager(plugin);
+        hookManager = new HookManager(plugin);
     }
 
-    private void registerDirectories() {
-        converterDirectory = new File(getDataFolder(), "converters");
-        converterDirectory.mkdirs();
+    private void registerFiles(FastPluginConfigurer plugin) {
+        saveDefaultConfig();
+        Set<String> languages = LocaleManager.getSupportedLanguages();
+        for (String lang : languages) {
+            String filePath = String.format("languages\\%s.yml", lang);
+            if (!new File(plugin.getDataFolder(), filePath).exists()) {
+                saveResource(filePath, false);
+            }
+        }
     }
 
-    private void registerEvents(PluginManager pluginManager) {
-        pluginManager.registerEvents(inventoryManager, instance);
-        pluginManager.registerEvents(new DupeFixer(instance, inventoryManager), instance);
-        pluginManager.registerEvents(new PlayerListener(instance), instance);
+    private void registerCommands(FastPluginConfigurer plugin) {
+        new FPCCommand(plugin);
+    }
+
+    private void registerEvents(PluginManager pluginManager, FastPluginConfigurer plugin) {
+        pluginManager.registerEvents(inventoryManager, plugin);
+        pluginManager.registerEvents(new DupeFixer(plugin, inventoryManager), plugin);
+        pluginManager.registerEvents(new PlayerListener(plugin), plugin);
     }
 }

@@ -2,6 +2,7 @@ package kz.hxncus.mc.fastpluginconfigurer.hook;
 
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
 import lombok.Getter;
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
 
 import java.util.logging.Logger;
@@ -16,9 +17,10 @@ public class HookManager {
 
     public HookManager(FastPluginConfigurer plugin) {
         this.plugin = plugin;
+        register(Bukkit.getPluginManager());
     }
 
-    public void registerHooks(PluginManager pluginManager) {
+    public void register(PluginManager pluginManager) {
         Logger logger = plugin.getLogger();
         if (pluginManager.getPlugin("deluxemenus") != null) {
             deluxeMenusHook = new DeluxeMenusHook(plugin);

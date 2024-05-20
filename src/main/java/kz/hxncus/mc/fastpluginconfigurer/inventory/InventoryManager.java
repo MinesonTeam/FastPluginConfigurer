@@ -1,7 +1,7 @@
 package kz.hxncus.mc.fastpluginconfigurer.inventory;
 
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
-import kz.hxncus.mc.fastpluginconfigurer.inventory.marker.InventoryItemMarker;
+import kz.hxncus.mc.fastpluginconfigurer.inventory.marker.PDCItemMarker;
 import lombok.Getter;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.EventHandler;
@@ -18,10 +18,10 @@ import java.util.concurrent.ConcurrentHashMap;
 @Getter
 public final class InventoryManager implements Listener {
     private final Map<Inventory, FastInventory> inventories = new ConcurrentHashMap<>();
-    private final InventoryItemMarker itemMarker;
+    private final PDCItemMarker itemMarker;
 
     public InventoryManager(FastPluginConfigurer plugin) {
-        this.itemMarker = new InventoryItemMarker(plugin);
+        this.itemMarker = new PDCItemMarker(plugin);
     }
 
     public void register(Inventory inventory, FastInventory handler) {

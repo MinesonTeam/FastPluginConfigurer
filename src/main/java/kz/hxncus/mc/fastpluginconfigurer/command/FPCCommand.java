@@ -7,7 +7,9 @@ import kz.hxncus.mc.fastpluginconfigurer.converter.Convertible;
 import kz.hxncus.mc.fastpluginconfigurer.fast.FastPlayer;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.BasicFastInventory;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.FastInventory;
+import kz.hxncus.mc.fastpluginconfigurer.locale.Messages;
 import kz.hxncus.mc.fastpluginconfigurer.material.MaterialValues;
+import kz.hxncus.mc.fastpluginconfigurer.util.BytesUtil;
 import kz.hxncus.mc.fastpluginconfigurer.util.ItemBuilder;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -26,7 +28,13 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.Plugin;
 
 import java.io.File;
-import java.util.*;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class FPCCommand extends AbstractCommand {
@@ -37,25 +45,28 @@ public class FPCCommand extends AbstractCommand {
     @Override
     public void execute(CommandSender sender, Command command, String label, String... args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("You must be a player to execute this command.");
+            Messages.MUST_BE_PLAYER.sendMessage(sender);
             return;
         }
-        switch (args[0].toLowerCase(Locale.US)) {
-            case Constants.INVENTORY_TO_FILE:
-            case Constants.FILE_TO_INVENTORY:
-                inventorySubCommand(sender, label, args);
-                break;
-            case Constants.CONFIG:
-                configSubCommand((HumanEntity) sender, label, args);
-                break;
-            default:
-                sendHelpMessage(sender, label);
-                break;
+        if (args.length < 1) {
+            sendHelpMessage(sender, label);
+        } else if (args[0].equalsIgnoreCase(Constants.INVENTORY_TO_FILE) || args[0].equals(Constants.FILE_TO_INVENTORY)) {
+            inventorySubCommand(sender, label, args);
+        } else if (args[0].equalsIgnoreCase(Constants.CONFIG)) {
+            configSubCommand((HumanEntity) sender, label, args);
+        } else if (args[0].equalsIgnoreCase("reload")) {
+            plugin.reloadConfig();
+            plugin.registerStaff();
+            for (Messages messages : Messages.values()) {
+                messages.updateMessage();
+            }
+        } else {
+            sendHelpMessage(sender, label);
         }
     }
 
     private void inventorySubCommand(CommandSender sender, String label, String... args) {
-        if (args.length < 2) {
+        if (args.length < 3) {
             sendHelpMessage(sender, label);
             return;
         }
@@ -68,7 +79,8 @@ public class FPCCommand extends AbstractCommand {
             }
         }
         if (converter == null) {
-            sender.sendMessage("This converter type is not exists.");
+            Messages.CONVERTER_TYPE_DOES_NOT_EXIST.sendMessage(sender);
+
         } else {
             Player player = (Player) sender;
             if (args[0].equalsIgnoreCase(Constants.INVENTORY_TO_FILE)) {
@@ -86,7 +98,7 @@ public class FPCCommand extends AbstractCommand {
         }
         Plugin targetPlugin = Bukkit.getPluginManager().getPlugin(args[1]);
         if (targetPlugin == null) {
-            humanEntity.sendMessage("This plugin doesn't exist.");
+            Messages.PLUGIN_DOES_NOT_EXIST.sendMessage(humanEntity);
         } else {
             targetPlugin.reloadConfig();
             FastInventory fastInventory = new BasicFastInventory(plugin, 54, args[1]);
@@ -116,8 +128,8 @@ public class FPCCommand extends AbstractCommand {
         while (iterator.hasNext()) {
             if (inventory.firstEmpty() > 44) {
                 FastInventory basicFastInventory = createFastInventory(lastPluginName);
-                fastInventory.setItem(53, Constants.NEXT_PAGE_ITEM, event -> event.getWhoClicked().openInventory(basicFastInventory.getInventory()));
-                basicFastInventory.setItem(45, Constants.PREVIOUS_PAGE_ITEM, event -> event.getWhoClicked().openInventory(inventory));
+                fastInventory.setItem(53, Constants.ARROW_ITEM.setDisplayName(Messages.NEXT_PAGE.getMessage()).build(), event -> event.getWhoClicked().openInventory(basicFastInventory.getInventory()));
+                basicFastInventory.setItem(45, Constants.ARROW_ITEM.setDisplayName(Messages.PREVIOUS_PAGE.getMessage()).build(), event -> event.getWhoClicked().openInventory(inventory));
                 setupConfigInventories(iterator, basicFastInventory, section, lastPluginName);
                 return;
             }
@@ -135,14 +147,14 @@ public class FPCCommand extends AbstractCommand {
     }
     
     private void addNewKeyItem(FastInventory inventory, String currentPath) {
-        inventory.addItem(Constants.ADD_NEW_KEY_ITEM, event -> {
+        inventory.addItem(Constants.NETHER_STAR.setDisplayName(Messages.CLICK_TO_ADD_NEW_KEY.getMessage()).build(), event -> {
             HumanEntity humanEntity = event.getWhoClicked();
             humanEntity.closeInventory();
 
             FastPlayer player = FastPluginConfigurer.getFastPlayer(humanEntity.getUniqueId());
             player.setChatAddKey(true, plugin);
             player.setPath(currentPath);
-            humanEntity.sendMessage("Write down the new key in the chat." + (StringUtils.isEmpty(currentPath) ? "" : " Path: " + currentPath));
+            Messages.WRITE_NEW_KEY_IN_CHAT.sendMessage(humanEntity, StringUtils.isEmpty(currentPath) ? "" : String.format(Messages.PATH.getMessage(), currentPath));
         });
     }
 
@@ -157,21 +169,35 @@ public class FPCCommand extends AbstractCommand {
         }
         if (sections != null) {
             FastInventory fastInventory = createFastInventory(lastPluginName);
-            inventory.addItem(new ItemBuilder(Material.OAK_SIGN).setDisplayName("§fSection: §e" + path)
-                    .addLore(Constants.SECTION_LORE)
+            inventory.addItem(new ItemBuilder(Material.OAK_SIGN).setDisplayName(Messages.SECTION.getFormattedMessage(path))
+                    .addLore("", Messages.CLICK_TO_OPEN_SECTION.getMessage(), Messages.SHIFT_CLICK_TO_EDIT_SECTION.getMessage())
                     .build(), event -> onSectionClick(event, fastInventory, fullPath));
-            fastInventory.setItem(45, Constants.PREVIOUS_PAGE_ITEM, event -> event.getWhoClicked().openInventory(inventory.getInventory()));
+            fastInventory.setItem(45, Constants.ARROW_ITEM.setDisplayName(Messages.PREVIOUS_PAGE.getMessage()).build(),
+                    event -> event.getWhoClicked().openInventory(inventory.getInventory()));
             setupConfigInventories(sections.getKeys(false).iterator(), fastInventory, sections, lastPluginName);
             return;
         }
-        addKeyItemToInventory(inventory, section.get(path, ""), fullPath);
+        Object value = section.get(path, "");
+        String pathLowerCase = path.toLowerCase(java.util.Locale.ROOT);
+        if (value instanceof String && (pathLowerCase.endsWith("password") || pathLowerCase.endsWith("pass"))) {
+            try {
+                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                byte[] encodedHash = digest.digest(((String) value).getBytes(StandardCharsets.UTF_8));
+                value = BytesUtil.bytesToHex(encodedHash);
+            } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        addKeyItemToInventory(inventory, value, fullPath);
     }
 
     private void addKeyItemToInventory(FastInventory inventory, Object value, String fullPath) {
-        inventory.addItem(new ItemBuilder(getMaterialFromValue(value)).setDisplayName("§fKey: §e" + fullPath)
-                                                                      .addLore("§7Current value:", " §8▪ §e" + (StringUtils.isEmpty(value.toString()) ? "§o§mempty value" : value))
-                                                                      .addLore(Constants.ITEM_LORE).setAmount(value instanceof Integer ? (Integer) value : 1)
-                                                                      .build(), event -> onItemClick(event, fullPath, value.toString()));
+        inventory.addItem(new ItemBuilder(getMaterialFromValue(value))
+            .setDisplayName(Messages.KEY.getFormattedMessage(fullPath))
+            .addLore(Messages.CURRENT_VALUE.getMessage(), Messages.VALUE.getFormattedMessage(StringUtils.isEmpty(value.toString()) ? Messages.EMPTY_VALUE : value))
+            .addLore("", Messages.CLICK_TO_CHANGE_CURRENT_VALUE.getMessage(), Messages.SHIFT_CLICK_TO_COPY_CURRENT_VALUE.getMessage())
+            .setAmount(value instanceof Integer ? (Integer) value : 1)
+            .build(), event -> onItemClick(event, fullPath, value.toString()));
     }
 
     private void onSectionClick(InventoryClickEvent event, FastInventory fastInventory, String fullPath) {
@@ -188,17 +214,17 @@ public class FPCCommand extends AbstractCommand {
         FastPlayer player = FastPluginConfigurer.getFastPlayer(humanEntity.getUniqueId());
         player.setChatSetKey(true, plugin);
         player.setPath(fullPath);
-        humanEntity.sendMessage("Write a value for path §e" + fullPath + "§r in the chat or write \"cancel\" to cancel.");
+        Messages.WRITE_VALUE_IN_CHAT.sendMessage(humanEntity, fullPath);
     }
 
     private void onItemClick(InventoryClickEvent event, String fullPath, String valueString) {
         HumanEntity humanEntity = event.getWhoClicked();
         if (event.getClick().isShiftClick()) {
             if (valueString.length() > 256) {
-                humanEntity.sendMessage("The value is too long to be copied. Please change the value in the config.");
+                Messages.VALUE_TOO_LONG.sendMessage(humanEntity);
                 return;
             }
-            TextComponent textComponent = new TextComponent("Open chat then click this message to copy the value: " + valueString);
+            TextComponent textComponent = new TextComponent(Messages.CLICK_MESSAGE_TO_COPY_VALUE.getFormattedMessage(valueString));
             textComponent.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, valueString));
             humanEntity.spigot().sendMessage(textComponent);
             return;
@@ -219,17 +245,17 @@ public class FPCCommand extends AbstractCommand {
     }
 
     private void sendHelpMessage(CommandSender sender, String label) {
-        sender.sendMessage("FastPluginConfigurer help:");
-        sender.sendMessage(String.format("/%s config <plugin> [file_name]", label));
-        sender.sendMessage(String.format("/%s inventorytofile <converter> <file_name>", label));
-        sender.sendMessage(String.format("/%s filetoinventory <converter> <file_name>", label));
+        Messages.HELP.sendMessage(sender);
+        Messages.HELP_CONFIG.sendMessage(sender, label);
+        Messages.HELP_INVENTORYTOFILE.sendMessage(sender, label);
+        Messages.HELP_FILETOINVENTORY.sendMessage(sender, label);
     }
 
     @Override
     public List<String> complete(CommandSender sender, Command command, String... args) {
         int length = args.length;
         if (length == 1) {
-            return List.of(Constants.CONFIG, Constants.INVENTORY_TO_FILE, Constants.FILE_TO_INVENTORY);
+            return List.of("reload", Constants.CONFIG, Constants.INVENTORY_TO_FILE, Constants.FILE_TO_INVENTORY);
         }
         String args0 = args[0];
         if (length == 2) {
@@ -269,7 +295,7 @@ public class FPCCommand extends AbstractCommand {
     private static List<String> getPluginConfigFiles(String args1) {
         Plugin targetPlugin = Bukkit.getPluginManager().getPlugin(args1);
         if (targetPlugin != null) {
-            String[] array = targetPlugin.getDataFolder().list((dir, name) -> name.endsWith(".yml"));
+            String[] array = targetPlugin.getDataFolder().list((dir, name) -> name.endsWith(Constants.YML_EXPANSION));
             if (array != null) {
                 return Arrays.asList(array);
             }

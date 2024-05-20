@@ -6,6 +6,7 @@ import com.extendedclip.deluxemenus.menu.MenuItem;
 import kz.hxncus.mc.fastpluginconfigurer.Constants;
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
 import kz.hxncus.mc.fastpluginconfigurer.converter.Convertible;
+import kz.hxncus.mc.fastpluginconfigurer.locale.Messages;
 import kz.hxncus.mc.fastpluginconfigurer.util.FileUtils;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -36,12 +37,12 @@ public class DeluxeMenusHook implements Convertible {
         Block targetBlock = player.getTargetBlockExact(5);
         BlockState state = targetBlock == null ? null : targetBlock.getState();
         if (!(state instanceof Chest)) {
-            player.sendMessage(Constants.MUST_LOOKING_AT_DOUBLE_CHEST);
+            player.sendMessage(Messages.MUST_LOOKING_AT_DOUBLE_CHEST.getMessage());
             return;
         }
         Menu menu = Menu.getMenu(fileName);
         if (menu == null) {
-            player.sendMessage("Menu not found: " + fileName);
+            Messages.MENU_NOT_FOUND.sendMessage(player, fileName);
         } else {
             storeConfigItemsInInventory(player, ((Chest) state).getInventory(), menu);
         }
@@ -56,36 +57,35 @@ public class DeluxeMenusHook implements Convertible {
             }
         }
         player.openInventory(chestInventory);
-        player.sendMessage("Successfully stored all items to the chest.");
+        Messages.SUCCESSFULLY_STORED_ITEMS_TO_CHEST.sendMessage(player);
     }
 
     @Override
     public void inventoryToFile(Player player, String fileName) {
-        String expansion = ".yml";
-        File file = new File(plugin.getConverterDirectory(), fileName.endsWith(expansion) ? fileName : fileName + expansion);
+        File file = new File(plugin.getDirectoryManager().getConverterDirectory(), fileName.endsWith(Constants.YML_EXPANSION) ? fileName : fileName + Constants.YML_EXPANSION);
         if (file.exists()) {
-            player.sendMessage("File is already exists: " + fileName);
+            Messages.FILE_ALREADY_EXISTS.sendMessage(player, fileName);
             return;
         }
         Block targetBlock = player.getTargetBlockExact(5);
         BlockState state = targetBlock == null ? null : targetBlock.getState();
-        if (!(state instanceof Chest)) {
-            player.sendMessage(Constants.MUST_LOOKING_AT_DOUBLE_CHEST);
+        if (state instanceof Chest) {
+            Inventory chestInventory = ((Chest) state).getInventory();
+            FileConfiguration config = YamlConfiguration.loadConfiguration(file);
+            configureInventory(fileName, config, chestInventory);
+            int count = 0;
+            for (int i = 0; i < chestInventory.getSize(); i++) {
+                ItemStack item = chestInventory.getItem(i);
+                if (item == null || item.getType() == Material.AIR) {
+                    continue;
+                }
+                storeItemInConfig(item, config, count++, i);
+            }
+            FileUtils.reload(config, file);
+            Messages.CHEST_SUCCESSFULLY_STORED_INTO_FILE.sendMessage(player, fileName);
             return;
         }
-        Inventory chestInventory = ((Chest) state).getInventory();
-        FileConfiguration config = YamlConfiguration.loadConfiguration(file);
-        configureInventory(fileName, config, chestInventory);
-        int count = 0;
-        for (int i = 0; i < chestInventory.getSize(); i++) {
-            ItemStack item = chestInventory.getItem(i);
-            if (item == null || item.getType() == Material.AIR) {
-                continue;
-            }
-            storeItemInConfig(item, config, count++, i);
-        }
-        FileUtils.reload(config, file);
-        player.sendMessage("Chest inventory successfully saved into " + fileName);
+        player.sendMessage(Messages.MUST_LOOKING_AT_DOUBLE_CHEST.getMessage());
     }
 
     @Override

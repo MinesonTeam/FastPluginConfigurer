@@ -8,6 +8,7 @@ import fr.maxlego08.menu.api.pattern.Pattern;
 import kz.hxncus.mc.fastpluginconfigurer.Constants;
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
 import kz.hxncus.mc.fastpluginconfigurer.converter.Convertible;
+import kz.hxncus.mc.fastpluginconfigurer.locale.Messages;
 import kz.hxncus.mc.fastpluginconfigurer.util.FileUtils;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -40,13 +41,13 @@ public class ZMenuHook implements Convertible {
         Block targetBlock = player.getTargetBlockExact(5);
         BlockState state = targetBlock == null ? null : targetBlock.getState();
         if (!(state instanceof Chest)) {
-            player.sendMessage(Constants.MUST_LOOKING_AT_DOUBLE_CHEST);
+            player.sendMessage(Messages.MUST_LOOKING_AT_DOUBLE_CHEST.getMessage());
             return;
         }
         InventoryManager manager = MenuPlugin.getInstance().getInventoryManager();
         Optional<fr.maxlego08.menu.api.Inventory> inventory = manager.getInventory(fileName);
         if (inventory.isEmpty()) {
-            player.sendMessage(String.format("Menu not found: %s", fileName));
+            Messages.MENU_NOT_FOUND.sendMessage(player, fileName);
         } else {
             storeConfigInInventory(player, ((Chest) state).getInventory(), (ZInventory) inventory.get());
         }
@@ -68,15 +69,14 @@ public class ZMenuHook implements Convertible {
             }
         }
         player.openInventory(chestInventory);
-        player.sendMessage("Successfully stored all items to the chest.");
+        Messages.SUCCESSFULLY_STORED_ITEMS_TO_CHEST.sendMessage(player);
     }
 
     @Override
     public void inventoryToFile(Player player, String fileName) {
-        String expansion = ".yml";
-        File file = new File(plugin.getConverterDirectory(), fileName.endsWith(expansion) ? fileName : fileName + expansion);
+        File file = new File(plugin.getDirectoryManager().getConverterDirectory(), fileName.endsWith(Constants.YML_EXPANSION) ? fileName : fileName + Constants.YML_EXPANSION);
         if (file.exists()) {
-            player.sendMessage("File is already exists: " + fileName);
+            Messages.FILE_ALREADY_EXISTS.sendMessage(player, fileName);
             return;
         }
         Block targetBlock = player.getTargetBlockExact(5);
@@ -94,10 +94,10 @@ public class ZMenuHook implements Convertible {
                 storeItemInConfig(item, config, count++, i);
             }
             FileUtils.reload(config, file);
-            player.sendMessage("Chest inventory successfully saved into " + fileName);
+            Messages.CHEST_SUCCESSFULLY_STORED_INTO_FILE.sendMessage(player, fileName);
             return;
         }
-        player.sendMessage(Constants.MUST_LOOKING_AT_DOUBLE_CHEST);
+        player.sendMessage(Messages.MUST_LOOKING_AT_DOUBLE_CHEST.getMessage());
     }
     private void configureInventory(String fileName, FileConfiguration config, Inventory chestInventory) {
         config.set("name", fileName);

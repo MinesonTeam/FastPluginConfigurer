@@ -2,6 +2,7 @@ package kz.hxncus.mc.fastpluginconfigurer.listener;
 
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
 import kz.hxncus.mc.fastpluginconfigurer.fast.FastPlayer;
+import kz.hxncus.mc.fastpluginconfigurer.locale.Messages;
 import kz.hxncus.mc.fastpluginconfigurer.util.FileUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.bukkit.Bukkit;
@@ -29,8 +30,7 @@ public class PlayerListener implements Listener {
     private void openLastClosedInventory(FastPlayer fastPlayer, Player player, File file) {
         String pluginName = fastPlayer.getLastPluginName();
         if (pluginName != null) {
-            Bukkit.getScheduler().runTask(plugin,
-                    () -> Bukkit.dispatchCommand(player, String.format("fpc config %s %s", pluginName, file.getName())));
+            Bukkit.getScheduler().runTask(plugin, () -> Bukkit.dispatchCommand(player, String.format("fpc config %s %s", pluginName, file.getName())));
         }
     }
 
@@ -38,27 +38,27 @@ public class PlayerListener implements Listener {
     public void onPlayerChatEvent(AsyncPlayerChatEvent event) {
         Player player = event.getPlayer();
         FastPlayer fastPlayer = FastPluginConfigurer.getFastPlayer(player.getUniqueId());
-        String message = event.getMessage();
         if (!fastPlayer.isChatAddKey() && !fastPlayer.isChatSetKey()) {
             return;
         }
         File file = fastPlayer.getFile();
         if (!file.exists()) {
             try {
-                if (new File(file.getParentFile().getPath()).mkdirs()) {
+                if (file.getParentFile().mkdirs()) {
                     file.createNewFile();
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
+        String message = event.getMessage();
         if ("cancel".equalsIgnoreCase(message)) {
             fastPlayer.setChatSetKey(false);
             openLastClosedInventory(fastPlayer, player, file);
         }
         String path = fastPlayer.getPath();
         if (path == null) {
-            player.sendMessage("Invalid path.");
+            player.sendMessage(Messages.INVALID_PATH.getMessage());
             return;
         }
         YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
@@ -90,7 +90,7 @@ public class PlayerListener implements Listener {
                 objects.add(convert(messages));
             }
             return objects;
-        } else if (message.startsWith("\"") && message.endsWith("\"") || message.startsWith("'") && message.endsWith("'")) {
+        } else if (isMessageQuotes(message)) {
             return message.substring(1, message.length() - 1);
         } else if (NumberUtils.isNumber(message)) {
             return NumberUtils.createNumber(message);
@@ -100,6 +100,12 @@ public class PlayerListener implements Listener {
             return false;
         }
         return message;
+    }
+
+    public boolean isMessageQuotes(String message) {
+        String doubleQuotes = "\"";
+        String quotes = "'";
+        return message.startsWith(doubleQuotes) && message.endsWith(doubleQuotes) || message.startsWith(quotes) && message.endsWith(quotes);
     }
 
     @EventHandler
