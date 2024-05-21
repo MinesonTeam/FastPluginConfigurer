@@ -4,7 +4,7 @@ import kz.hxncus.mc.fastpluginconfigurer.Constants;
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
 import kz.hxncus.mc.fastpluginconfigurer.converter.Convertible;
 import kz.hxncus.mc.fastpluginconfigurer.language.Messages;
-import kz.hxncus.mc.fastpluginconfigurer.util.FileUtils;
+import kz.hxncus.mc.fastpluginconfigurer.util.FileUtil;
 import me.hsgamer.bettergui.BetterGUI;
 import me.hsgamer.bettergui.api.menu.Menu;
 import me.hsgamer.bettergui.lib.core.bukkit.gui.object.BukkitItem;
@@ -91,7 +91,7 @@ public class BetterGUIHook implements Convertible {
                 }
                 storeItemInConfig(item, config, count++, i);
             }
-            FileUtils.reload(config, file);
+            FileUtil.reload(config, file);
             Messages.CHEST_SUCCESSFULLY_STORED_INTO_FILE.sendMessage(player, fileName);
             return;
         }

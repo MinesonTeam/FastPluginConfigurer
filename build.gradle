@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'kz.hxncus.mc'
-version = '1.0.0'
+version = '1.0.4.0'
 
 repositories {
     mavenCentral()
@@ -20,6 +20,7 @@ repositories {
 
 dependencies {
     compileOnly "org.spigotmc:spigot-api:1.14-R0.1-SNAPSHOT"
+
     compileOnly(files('E:\\dev-server-1.16.5\\plugins\\DeluxeMenus-1.14.0-Release.jar'))
     compileOnly(files('E:\\dev-server-1.16.5\\plugins\\ChestCommands.jar'))
     compileOnly(files('E:\\dev-server-1.16.5\\plugins\\zmenu-1.0.3.1.jar'))

@@ -3,7 +3,6 @@ package kz.hxncus.mc.fastpluginconfigurer;
 import kz.hxncus.mc.fastpluginconfigurer.command.FPCCommand;
 import kz.hxncus.mc.fastpluginconfigurer.directory.DirectoryManager;
 import kz.hxncus.mc.fastpluginconfigurer.fast.FastPlayer;
-import kz.hxncus.mc.fastpluginconfigurer.hook.HookManager;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.InventoryManager;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.dupefixer.DupeFixer;
 import kz.hxncus.mc.fastpluginconfigurer.language.LanguageManager;
@@ -24,7 +23,6 @@ public final class FastPluginConfigurer extends JavaPlugin {
     private static FastPluginConfigurer instance;
     private static final Map<UUID, FastPlayer> PLAYER_MAP = new ConcurrentHashMap<>();
     private InventoryManager inventoryManager;
-    private HookManager hookManager;
     private DirectoryManager directoryManager;
     private LanguageManager languageManager;
 
@@ -61,7 +59,6 @@ public final class FastPluginConfigurer extends JavaPlugin {
         directoryManager = new DirectoryManager(plugin);
         languageManager = new LanguageManager(plugin);
         inventoryManager = new InventoryManager(plugin);
-        hookManager = new HookManager(plugin);
     }
 
     private void registerFiles(FastPluginConfigurer plugin) {

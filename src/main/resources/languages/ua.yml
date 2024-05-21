@@ -1,5 +1,5 @@
 # {PREFIX} placeholder.
-prefix: "§9🪓 §bFPC §8»§r"
+prefix: "§7[§bFPC§7] §8»§r"
 must_be_player: "{PREFIX} Ви повинні бути гравцем, щоб виконати цю команду."
 converter_type_does_not_exist: "{PREFIX} Цей тип конвертера не існує."
 plugin_does_not_exist: "{PREFIX} Цей плагін не існує."

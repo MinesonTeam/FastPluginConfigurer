@@ -5,12 +5,13 @@ import org.bukkit.Material;
 
 @Getter
 public enum MaterialValues {
-    STRING(Material.STRING, String.class), ENDER_PEARL(Material.ENDER_PEARL, int.class), ITEM_FRAME(Material.ITEM_FRAME, Enum.class),
-    SLIME_BALL(Material.SLIME_BALL, boolean.class), MAGMA_CREAM(Material.MAGMA_CREAM, boolean.class), BOOKSHELF(Material.BOOKSHELF, Iterable.class);
+    BOOKSHELF(Iterable.class), ITEM_FRAME(Enum.class), MAGMA_CREAM(Boolean.class),
+    GOLD_NUGGET(Integer.class), PAPER(String.class), SLIME_BALL(Boolean.class);
     final Material material;
     final Class<?> clazz;
-    MaterialValues(Material material, Class<?> clazz) {
-        this.material = material;
+
+    MaterialValues(Class<?> clazz) {
+        this.material = Material.valueOf(name());
         this.clazz = clazz;
     }
 }

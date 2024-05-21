@@ -2,15 +2,14 @@ package kz.hxncus.mc.fastpluginconfigurer.command;
 
 import kz.hxncus.mc.fastpluginconfigurer.Constants;
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
-import kz.hxncus.mc.fastpluginconfigurer.converter.Converters;
 import kz.hxncus.mc.fastpluginconfigurer.converter.Convertible;
 import kz.hxncus.mc.fastpluginconfigurer.fast.FastPlayer;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.BasicFastInventory;
-import kz.hxncus.mc.fastpluginconfigurer.inventory.FastInventory;
 import kz.hxncus.mc.fastpluginconfigurer.language.Messages;
 import kz.hxncus.mc.fastpluginconfigurer.material.MaterialValues;
-import kz.hxncus.mc.fastpluginconfigurer.util.BytesUtil;
+import kz.hxncus.mc.fastpluginconfigurer.util.HashUtil;
 import kz.hxncus.mc.fastpluginconfigurer.util.ItemBuilder;
+import kz.hxncus.mc.fastpluginconfigurer.util.VersionUtil;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.apache.commons.lang.StringUtils;
@@ -24,13 +23,9 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.Plugin;
 
 import java.io.File;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -72,16 +67,15 @@ public class FPCCommand extends AbstractCommand {
             return;
         }
         Convertible converter = null;
-        for (Converters converters : Converters.values()) {
+        for (Convertible.Converters converters : Convertible.Converters.values()) {
             Convertible convertible = converters.getConverter();
-            if (convertible != null && args[1].equalsIgnoreCase(converters.getName())) {
+            if (args[1].equalsIgnoreCase(converters.getName())) {
                 converter = convertible;
                 break;
             }
         }
         if (converter == null) {
             Messages.CONVERTER_TYPE_DOES_NOT_EXIST.sendMessage(sender);
-
         } else {
             Player player = (Player) sender;
             if (args[0].equalsIgnoreCase(Constants.INVENTORY_TO_FILE)) {
@@ -102,7 +96,7 @@ public class FPCCommand extends AbstractCommand {
             Messages.PLUGIN_DOES_NOT_EXIST.sendMessage(humanEntity);
         } else {
             targetPlugin.reloadConfig();
-            FastInventory fastInventory = new BasicFastInventory(plugin, 54, args[1]);
+            BasicFastInventory fastInventory = new BasicFastInventory(plugin, 54, args[1]);
             fastInventory.addClickHandler(event -> event.setCancelled(true));
 
             String path = targetPlugin.getDataFolder()
@@ -124,30 +118,29 @@ public class FPCCommand extends AbstractCommand {
         }
     }
 
-    private void setupConfigInventories(Iterator<String> iterator, FastInventory fastInventory, ConfigurationSection section, String lastPluginName) {
-        Inventory inventory = fastInventory.getInventory();
+    private void setupConfigInventories(Iterator<String> iterator, BasicFastInventory fastInventory, ConfigurationSection section, String lastPluginName) {
         while (iterator.hasNext()) {
-            if (inventory.firstEmpty() > 44) {
-                FastInventory basicFastInventory = createFastInventory(lastPluginName);
+            if (fastInventory.getInventory().firstEmpty() > 44) {
+                BasicFastInventory basicFastInventory = createFastInventory(lastPluginName);
                 fastInventory.setItem(53, Constants.ARROW_ITEM.setDisplayName(Messages.NEXT_PAGE.getMessage()).build(), event -> event.getWhoClicked().openInventory(basicFastInventory.getInventory()));
-                basicFastInventory.setItem(45, Constants.ARROW_ITEM.setDisplayName(Messages.PREVIOUS_PAGE.getMessage()).build(), event -> event.getWhoClicked().openInventory(inventory));
+                basicFastInventory.setItem(45, Constants.ARROW_ITEM.setDisplayName(Messages.PREVIOUS_PAGE.getMessage()).build(), event -> event.getWhoClicked().openInventory(fastInventory.getInventory()));
                 setupConfigInventories(iterator, basicFastInventory, section, lastPluginName);
                 return;
             }
             setupKey(lastPluginName, fastInventory, section, iterator.next());
         }
-        if (inventory.firstEmpty() < 45) {
+        if (fastInventory.getInventory().firstEmpty() < 45) {
             addNewKeyItem(fastInventory, section.getCurrentPath());
         }
     }
 
-    private FastInventory createFastInventory(String title) {
-        FastInventory fastInventory = new BasicFastInventory(plugin, 54, title);
+    private BasicFastInventory createFastInventory(String title) {
+        BasicFastInventory fastInventory = new BasicFastInventory(plugin, 54, title);
         fastInventory.addClickHandler(event -> event.setCancelled(true));
         return fastInventory;
     }
     
-    private void addNewKeyItem(FastInventory inventory, String currentPath) {
+    private void addNewKeyItem(BasicFastInventory inventory, String currentPath) {
         inventory.addItem(Constants.NETHER_STAR.setDisplayName(Messages.CLICK_TO_ADD_NEW_KEY.getMessage()).build(), event -> {
             HumanEntity humanEntity = event.getWhoClicked();
             humanEntity.closeInventory();
@@ -159,7 +152,7 @@ public class FPCCommand extends AbstractCommand {
         });
     }
 
-    private void setupKey(String lastPluginName, FastInventory inventory, ConfigurationSection section, String path) {
+    private void setupKey(String lastPluginName, BasicFastInventory inventory, ConfigurationSection section, String path) {
         ConfigurationSection sections = section.getConfigurationSection(path);
         String currentPath = section.getCurrentPath();
         String fullPath;
@@ -169,8 +162,8 @@ public class FPCCommand extends AbstractCommand {
             fullPath = currentPath + "." + path;
         }
         if (sections != null) {
-            FastInventory fastInventory = createFastInventory(lastPluginName);
-            inventory.addItem(new ItemBuilder(Material.OAK_SIGN).setDisplayName(Messages.SECTION.getFormattedMessage(path))
+            BasicFastInventory fastInventory = createFastInventory(lastPluginName);
+            inventory.addItem(new ItemBuilder(VersionUtil.SIGN).setDisplayName(Messages.SECTION.getFormattedMessage(path))
                     .addLore("", Messages.CLICK_TO_OPEN_SECTION.getMessage(), Messages.SHIFT_CLICK_TO_EDIT_SECTION.getMessage())
                     .build(), event -> onSectionClick(event, fastInventory, fullPath));
             fastInventory.setItem(45, Constants.ARROW_ITEM.setDisplayName(Messages.PREVIOUS_PAGE.getMessage()).build(),
@@ -181,18 +174,12 @@ public class FPCCommand extends AbstractCommand {
         Object value = section.get(path, "");
         String pathLowerCase = path.toLowerCase(java.util.Locale.ROOT);
         if (value instanceof String && (pathLowerCase.endsWith("password") || pathLowerCase.endsWith("pass"))) {
-            try {
-                MessageDigest digest = MessageDigest.getInstance("SHA-256");
-                byte[] encodedHash = digest.digest(((String) value).getBytes(StandardCharsets.UTF_8));
-                value = BytesUtil.bytesToHex(encodedHash);
-            } catch (NoSuchAlgorithmException e) {
-                throw new RuntimeException(e);
-            }
+            value = HashUtil.toSHA256((String) value);
         }
         addKeyItemToInventory(inventory, value, fullPath);
     }
 
-    private void addKeyItemToInventory(FastInventory inventory, Object value, String fullPath) {
+    private void addKeyItemToInventory(BasicFastInventory inventory, Object value, String fullPath) {
         inventory.addItem(new ItemBuilder(getMaterialFromValue(value))
             .setDisplayName(Messages.KEY.getFormattedMessage(fullPath))
             .addLore(Messages.CURRENT_VALUE.getMessage(), Messages.VALUE.getFormattedMessage(StringUtils.isEmpty(value.toString()) ? Messages.EMPTY_VALUE : value))
@@ -201,7 +188,7 @@ public class FPCCommand extends AbstractCommand {
             .build(), event -> onItemClick(event, fullPath, value.toString()));
     }
 
-    private void onSectionClick(InventoryClickEvent event, FastInventory fastInventory, String fullPath) {
+    private void onSectionClick(InventoryClickEvent event, BasicFastInventory fastInventory, String fullPath) {
         HumanEntity humanEntity = event.getWhoClicked();
         if (!event.getClick().isShiftClick()) {
             humanEntity.openInventory(fastInventory.getInventory());
@@ -219,25 +206,26 @@ public class FPCCommand extends AbstractCommand {
     }
 
     private void onItemClick(InventoryClickEvent event, String fullPath, String valueString) {
-        HumanEntity humanEntity = event.getWhoClicked();
+        Player player = (Player) event.getWhoClicked();
         if (event.getClick().isShiftClick()) {
             if (valueString.length() > 256) {
-                Messages.VALUE_TOO_LONG.sendMessage(humanEntity);
+                Messages.VALUE_TOO_LONG.sendMessage(player);
                 return;
             }
+            player.closeInventory();
             TextComponent textComponent = new TextComponent(Messages.CLICK_MESSAGE_TO_COPY_VALUE.getFormattedMessage(valueString));
             textComponent.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, valueString));
-            humanEntity.spigot().sendMessage(textComponent);
+            player.spigot().sendMessage(textComponent);
             return;
         }
-        handlePlayerPathSetting(fullPath, humanEntity);
+        handlePlayerPathSetting(fullPath, player);
     }
 
     private static Material getMaterialFromValue(Object value) {
         for (MaterialValues values : MaterialValues.values()) {
             if (values.getClazz().isInstance(value)) {
                 if (value instanceof Boolean) {
-                    return ((boolean) value) ? Material.SLIME_BALL : Material.MAGMA_CREAM;
+                    return Boolean.TRUE.equals(value) ? Material.SLIME_BALL : Material.MAGMA_CREAM;
                 }
                 return values.getMaterial();
             }
@@ -271,7 +259,10 @@ public class FPCCommand extends AbstractCommand {
 
     private List<String> getListAtLength2(String args0) {
         if (args0.equalsIgnoreCase(Constants.INVENTORY_TO_FILE) || args0.equalsIgnoreCase(Constants.FILE_TO_INVENTORY)) {
-            return List.of("deluxemenus", "chestcommands", "bettergui", "zmenu");
+            return Arrays.stream(Convertible.Converters.values())
+                         .filter(Convertible.Converters::isEnabled)
+                         .map(Convertible.Converters::getName)
+                         .collect(Collectors.toList());
         } else if (args0.equalsIgnoreCase(Constants.CONFIG)) {
             return Arrays.stream(Bukkit.getPluginManager().getPlugins())
                          .map(Plugin::getName)
@@ -282,8 +273,8 @@ public class FPCCommand extends AbstractCommand {
 
     private List<String> getListAtLength3(String args0, String args1) {
         if (args0.equalsIgnoreCase(Constants.FILE_TO_INVENTORY)) {
-            for (Converters converters : Converters.values()) {
-                if (converters.getName().equalsIgnoreCase(args1)) {
+            for (Convertible.Converters converters : Convertible.Converters.values()) {
+                if (converters.isEnabled() && converters.getName().equalsIgnoreCase(args1)) {
                     return converters.getConverter().getAllFileNames();
                 }
             }

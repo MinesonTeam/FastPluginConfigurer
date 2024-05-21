@@ -9,7 +9,7 @@ import kz.hxncus.mc.fastpluginconfigurer.Constants;
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
 import kz.hxncus.mc.fastpluginconfigurer.converter.Convertible;
 import kz.hxncus.mc.fastpluginconfigurer.language.Messages;
-import kz.hxncus.mc.fastpluginconfigurer.util.FileUtils;
+import kz.hxncus.mc.fastpluginconfigurer.util.FileUtil;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -93,7 +93,7 @@ public class ZMenuHook implements Convertible {
                 }
                 storeItemInConfig(item, config, count++, i);
             }
-            FileUtils.reload(config, file);
+            FileUtil.reload(config, file);
             Messages.CHEST_SUCCESSFULLY_STORED_INTO_FILE.sendMessage(player, fileName);
             return;
         }

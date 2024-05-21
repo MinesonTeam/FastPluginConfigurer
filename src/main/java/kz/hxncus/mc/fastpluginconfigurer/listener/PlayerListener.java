@@ -3,7 +3,7 @@ package kz.hxncus.mc.fastpluginconfigurer.listener;
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
 import kz.hxncus.mc.fastpluginconfigurer.fast.FastPlayer;
 import kz.hxncus.mc.fastpluginconfigurer.language.Messages;
-import kz.hxncus.mc.fastpluginconfigurer.util.FileUtils;
+import kz.hxncus.mc.fastpluginconfigurer.util.FileUtil;
 import org.apache.commons.lang.math.NumberUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -67,7 +67,7 @@ public class PlayerListener implements Listener {
         } else if (fastPlayer.isChatSetKey()) {
             config.set(path, convert(message));
         }
-        FileUtils.reload(config, file);
+        FileUtil.reload(config, file);
         fastPlayer.setChatAddKey(false);
         fastPlayer.setChatSetKey(false);
         openLastClosedInventory(fastPlayer, player, file);
@@ -91,7 +91,7 @@ public class PlayerListener implements Listener {
                 objects.add(convert(messages));
             }
             return objects;
-        } else if (isMessageQuotes(message)) {
+        } else if (isMessageQuoted(message)) {
             return message.substring(1, message.length() - 1);
         } else if (NumberUtils.isNumber(message)) {
             return NumberUtils.createNumber(message);
@@ -103,10 +103,9 @@ public class PlayerListener implements Listener {
         return message;
     }
 
-    public boolean isMessageQuotes(String message) {
+    public boolean isMessageQuoted(String message) {
         String doubleQuotes = "\"";
-        String quotes = "'";
-        return message.startsWith(doubleQuotes) && message.endsWith(doubleQuotes) || message.startsWith(quotes) && message.endsWith(quotes);
+        return message.startsWith(doubleQuotes) && message.endsWith(doubleQuotes);
     }
 
     @EventHandler

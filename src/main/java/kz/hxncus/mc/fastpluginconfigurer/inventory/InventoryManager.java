@@ -1,7 +1,10 @@
 package kz.hxncus.mc.fastpluginconfigurer.inventory;
 
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
+import kz.hxncus.mc.fastpluginconfigurer.inventory.marker.ItemMarker;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.marker.PDCItemMarker;
+import kz.hxncus.mc.fastpluginconfigurer.inventory.marker.UnavailableItemMarker;
+import kz.hxncus.mc.fastpluginconfigurer.util.VersionUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import org.bukkit.entity.HumanEntity;
@@ -20,10 +23,14 @@ import java.util.concurrent.ConcurrentHashMap;
 @EqualsAndHashCode
 public class InventoryManager implements Listener {
     private final Map<Inventory, FastInventory> inventories = new ConcurrentHashMap<>();
-    private final PDCItemMarker itemMarker;
+    private final ItemMarker itemMarker;
 
     public InventoryManager(FastPluginConfigurer plugin) {
-        this.itemMarker = new PDCItemMarker(plugin);
+        if (VersionUtil.IS_PDC_VERSION) {
+            this.itemMarker = new PDCItemMarker(plugin);
+        } else {
+            this.itemMarker = new UnavailableItemMarker();
+        }
     }
 
     public void register(Inventory inventory, FastInventory handler) {

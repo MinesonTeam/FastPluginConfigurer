@@ -2,7 +2,7 @@ package kz.hxncus.mc.fastpluginconfigurer.inventory.dupefixer;
 
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.InventoryManager;
-import kz.hxncus.mc.fastpluginconfigurer.inventory.marker.PDCItemMarker;
+import kz.hxncus.mc.fastpluginconfigurer.inventory.marker.ItemMarker;
 import kz.hxncus.mc.fastpluginconfigurer.language.Messages;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -21,10 +21,10 @@ import org.bukkit.inventory.PlayerInventory;
 @EqualsAndHashCode
 public class DupeFixer implements Listener {
     private final FastPluginConfigurer plugin;
-    private final PDCItemMarker PDCItemMarker;
+    private final ItemMarker itemMarker;
     public DupeFixer(FastPluginConfigurer plugin, InventoryManager inventoryManager) {
         this.plugin = plugin;
-        this.PDCItemMarker = inventoryManager.getItemMarker();
+        this.itemMarker = inventoryManager.getItemMarker();
     }
 
     @EventHandler
@@ -33,7 +33,7 @@ public class DupeFixer implements Listener {
             Player player = event.getPlayer();
             PlayerInventory inventory = player.getInventory();
             for (ItemStack itemStack : inventory) {
-                if (PDCItemMarker.isItemMarked(itemStack)) {
+                if (itemMarker.isItemMarked(itemStack)) {
                     inventory.remove(itemStack);
                     plugin.getLogger().info(Messages.PLAYER_LOGGED_WITH_CUSTOM_ITEM.getFormattedMessage(player.getName()));
                 }
@@ -44,7 +44,7 @@ public class DupeFixer implements Listener {
     @EventHandler
     public void onEntityPickupItemEvent(EntityPickupItemEvent event) {
         Item item = event.getItem();
-        if (PDCItemMarker.isItemMarked(item.getItemStack())) {
+        if (itemMarker.isItemMarked(item.getItemStack())) {
             event.setCancelled(true);
             item.remove();
             plugin.getLogger().info(() -> Messages.SOMEONE_PICKED_CUSTOM_ITEM.getFormattedMessage(item.getLocation()));
@@ -54,7 +54,7 @@ public class DupeFixer implements Listener {
     @EventHandler
     public void onEntityDropItemEvent(EntityDropItemEvent event) {
         Item item = event.getItemDrop();
-        if (PDCItemMarker.isItemMarked(item.getItemStack())) {
+        if (itemMarker.isItemMarked(item.getItemStack())) {
             event.setCancelled(true);
             item.remove();
             plugin.getLogger().info(() -> Messages.SOMEONE_DROPPED_CUSTOM_ITEM.getFormattedMessage(item.getLocation()));
