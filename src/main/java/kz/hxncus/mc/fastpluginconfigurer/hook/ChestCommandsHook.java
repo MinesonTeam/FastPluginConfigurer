@@ -1,10 +1,11 @@
 package kz.hxncus.mc.fastpluginconfigurer.hook;
 
-import kz.hxncus.mc.fastpluginconfigurer.Constants;
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
-import kz.hxncus.mc.fastpluginconfigurer.converter.Convertible;
-import kz.hxncus.mc.fastpluginconfigurer.language.Messages;
+import kz.hxncus.mc.fastpluginconfigurer.attribute.*;
+import kz.hxncus.mc.fastpluginconfigurer.config.ConfigItem;
+import kz.hxncus.mc.fastpluginconfigurer.util.Constants;
 import kz.hxncus.mc.fastpluginconfigurer.util.FileUtil;
+import kz.hxncus.mc.fastpluginconfigurer.util.Messages;
 import me.filoghost.chestcommands.api.Icon;
 import me.filoghost.chestcommands.fcommons.collection.CaseInsensitiveString;
 import me.filoghost.chestcommands.inventory.Grid;
@@ -19,8 +20,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.Damageable;
-import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.File;
 import java.util.List;
@@ -34,11 +33,11 @@ public class ChestCommandsHook implements Convertible {
     }
 
     @Override
-    public void fileToInventory(Player player, String fileName) {
+    public void convertFileToInventory(Player player, String fileName) {
         Block targetBlock = player.getTargetBlockExact(5);
         BlockState state = targetBlock == null ? null : targetBlock.getState();
         if (!(state instanceof Chest)) {
-            player.sendMessage(Messages.MUST_LOOKING_AT_DOUBLE_CHEST.getMessage());
+            Messages.MUST_LOOKING_AT_DOUBLE_CHEST.sendMessage(player);
             return;
         }
         BaseMenu menu = MenuManager.getMenuByFileName(fileName);
@@ -49,7 +48,7 @@ public class ChestCommandsHook implements Convertible {
         }
     }
 
-    private void storeConfigItemsInInventory(Player player, Inventory chestInventory, Grid<Icon> icons) {
+    public static void storeConfigItemsInInventory(Player player, Inventory chestInventory, Grid<Icon> icons) {
         chestInventory.clear();
         for (int i = 0; i < icons.getRows(); i++) {
             for (int j = 0; j < icons.getColumns(); j++) {
@@ -65,8 +64,8 @@ public class ChestCommandsHook implements Convertible {
     }
 
     @Override
-    public void inventoryToFile(Player player, String fileName) {
-        File file = new File(plugin.getDirectoryManager().getConverterDirectory(), fileName.endsWith(Constants.YML_EXPANSION) ? fileName : fileName + Constants.YML_EXPANSION);
+    public void convertInventoryToFile(Player player, String fileName) {
+        File file = new File(plugin.getDirectoryManager().getConvertedDir(), fileName.endsWith(Constants.YML_EXPANSION) ? fileName : fileName + Constants.YML_EXPANSION);
         if (file.exists()) {
             Messages.FILE_ALREADY_EXISTS.sendMessage(player, fileName);
             return;
@@ -89,7 +88,7 @@ public class ChestCommandsHook implements Convertible {
             Messages.CHEST_SUCCESSFULLY_STORED_INTO_FILE.sendMessage(player, fileName);
             return;
         }
-        player.sendMessage(Messages.MUST_LOOKING_AT_DOUBLE_CHEST.getMessage());
+        Messages.MUST_LOOKING_AT_DOUBLE_CHEST.sendMessage(player);
     }
 
     private void configureInventory(String fileName, FileConfiguration config, Inventory chestInventory) {
@@ -104,33 +103,37 @@ public class ChestCommandsHook implements Convertible {
     }
 
     private void storeItemInConfig(ItemStack item, FileConfiguration config, int count, int index) {
-        ItemMeta itemMeta = item.getItemMeta();
-        config.set(count + ".ACTIONS", List.of(""));
-        if (itemMeta != null) {
-            if (itemMeta.hasDisplayName()) {
-                config.set(count + ".NAME", itemMeta.getDisplayName());
-            } else {
-                config.set(count + ".NAME", itemMeta.getLocalizedName());
-            }
-            if (itemMeta.hasLore()) {
-                config.set(count + ".LORE", itemMeta.getLore());
-            }
-            if (itemMeta instanceof Damageable && ((Damageable) itemMeta).hasDamage()) {
-                config.set(count + ".DURATION", ((Damageable) itemMeta).getDamage());
-            }
-            if (itemMeta.hasEnchants()) {
-                config.set(count + ".ENCHANTMENTS", itemMeta.getEnchants()
-                                                            .entrySet()
-                                                            .stream()
-                                                            .map(entry -> entry.getKey()
-                                                                               .getName() + ", " + entry.getValue())
-                                                            .collect(Collectors.toList()));
-            }
+        String path = count + ".";
+        ConfigItem configItem = new ConfigItem(item, index);
+        for (AttributeType attributeType : AttributeType.values()) {
+            config.set(path + attributeType.name().replace('_', '-'), attributeType.attribute.apply(configItem));
         }
-        config.set(count + ".AMOUNT", item.getAmount());
-        config.set(count + ".MATERIAL", item.getType().name());
-        config.set(count + ".KEEP-OPEN", true);
-        config.set(count + ".POSITION-X", index % 9 + 1);
-        config.set(count + ".POSITION-Y", index / 9 + 1);
+    }
+
+    public enum AttributeType {
+        AMOUNT(new AmountAttribute()),
+        DURABILITY(new DurabilityAttribute()),
+        LORE(new LoreAttribute()),
+        MATERIAL(new MaterialAttribute()),
+        NAME(new NameAttribute()),
+        POSITION_X(new PositionAttribute(slot -> slot % 9 + 1)),
+        POSITION_Y(new PositionAttribute(slot -> slot / 9 + 1)),
+//        NBT_DATA("NBT-DATA", NBTDataAttribute::new),
+        COLOR(new RGBAttribute(color -> color.getRed() + ", " + color.getGreen() + ", " + color.getBlue())),
+        SKULL_OWNER(new SkullOwnerAttribute()),
+        BANNER_COLOR(new BannerColorAttribute()),
+        BANNER_PATTERNS(new BannerPatternsAttribute(patterns -> patterns.stream()
+                                                                        .map(pattern -> pattern.getPattern().name() + ":" + pattern.getColor().name())
+                                                                        .collect(Collectors.toList()))),
+        ENCHANTMENTS(new EnchantmentsAttribute(map -> map.entrySet()
+                                                         .stream()
+                                                         .map(entry -> entry.getKey().getKey().getKey() + ", " + entry.getValue())
+                                                         .collect(Collectors.toList())));
+
+        final Attribute attribute;
+
+        AttributeType(Attribute attribute) {
+            this.attribute = attribute;
+        }
     }
 }

@@ -9,6 +9,7 @@ softdepend:
   - BetterGUI
 commands:
   fastpluginconfigurer:
+    permission: "fpc"
     aliases:
       - fpc
       - pluginconfigurer

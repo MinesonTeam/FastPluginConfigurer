@@ -5,11 +5,12 @@ import fr.maxlego08.menu.ZInventory;
 import fr.maxlego08.menu.api.InventoryManager;
 import fr.maxlego08.menu.api.button.Button;
 import fr.maxlego08.menu.api.pattern.Pattern;
-import kz.hxncus.mc.fastpluginconfigurer.Constants;
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
-import kz.hxncus.mc.fastpluginconfigurer.converter.Convertible;
-import kz.hxncus.mc.fastpluginconfigurer.language.Messages;
+import kz.hxncus.mc.fastpluginconfigurer.attribute.*;
+import kz.hxncus.mc.fastpluginconfigurer.config.ConfigItem;
+import kz.hxncus.mc.fastpluginconfigurer.util.Constants;
 import kz.hxncus.mc.fastpluginconfigurer.util.FileUtil;
+import kz.hxncus.mc.fastpluginconfigurer.util.Messages;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -19,15 +20,10 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class ZMenuHook implements Convertible {
     public final FastPluginConfigurer plugin;
@@ -37,11 +33,11 @@ public class ZMenuHook implements Convertible {
     }
 
     @Override
-    public void fileToInventory(Player player, String fileName) {
+    public void convertFileToInventory(Player player, String fileName) {
         Block targetBlock = player.getTargetBlockExact(5);
         BlockState state = targetBlock == null ? null : targetBlock.getState();
         if (!(state instanceof Chest)) {
-            player.sendMessage(Messages.MUST_LOOKING_AT_DOUBLE_CHEST.getMessage());
+            Messages.MUST_LOOKING_AT_DOUBLE_CHEST.sendMessage(player);
             return;
         }
         InventoryManager manager = MenuPlugin.getInstance().getInventoryManager();
@@ -73,8 +69,8 @@ public class ZMenuHook implements Convertible {
     }
 
     @Override
-    public void inventoryToFile(Player player, String fileName) {
-        File file = new File(plugin.getDirectoryManager().getConverterDirectory(), fileName.endsWith(Constants.YML_EXPANSION) ? fileName : fileName + Constants.YML_EXPANSION);
+    public void convertInventoryToFile(Player player, String fileName) {
+        File file = new File(plugin.getDirectoryManager().getConvertedDir(), fileName.endsWith(Constants.YML_EXPANSION) ? fileName : fileName + Constants.YML_EXPANSION);
         if (file.exists()) {
             Messages.FILE_ALREADY_EXISTS.sendMessage(player, fileName);
             return;
@@ -97,7 +93,7 @@ public class ZMenuHook implements Convertible {
             Messages.CHEST_SUCCESSFULLY_STORED_INTO_FILE.sendMessage(player, fileName);
             return;
         }
-        player.sendMessage(Messages.MUST_LOOKING_AT_DOUBLE_CHEST.getMessage());
+        Messages.MUST_LOOKING_AT_DOUBLE_CHEST.sendMessage(player);
     }
     private void configureInventory(String fileName, FileConfiguration config, Inventory chestInventory) {
         config.set("name", fileName);
@@ -106,30 +102,11 @@ public class ZMenuHook implements Convertible {
 
     private void storeItemInConfig(ItemStack item, FileConfiguration config, int count, int index) {
         String path = String.format("items.%s.", count);
-        config.set(path + "item.material", item.getType().name());
-        config.set(path + "item.amount", item.getAmount());
         config.set(path + "slot", index);
-        ItemMeta itemMeta = item.getItemMeta();
-        if (itemMeta == null) {
-            return;
-        }
-        String itemNamePath = "item.name";
-        if (itemMeta.hasDisplayName()) {
-            config.set(path + itemNamePath, itemMeta.getDisplayName());
-        } else {
-            config.set(path + itemNamePath, itemMeta.getLocalizedName());
-        }
-        if (itemMeta.hasLore()) {
-            config.set(path + "item.lore", itemMeta.getLore());
-        }
-        if (itemMeta.hasEnchants()) {
-            Stream<String> stringStream = itemMeta.getEnchants()
-                                                  .entrySet()
-                                                  .stream()
-                                                  .map(entry -> String.format("%s;%s",
-                                                      entry.getKey().getKey().getKey(),
-                                                      entry.getValue()));
-            config.set(path + "enchantments", stringStream.collect(Collectors.toList()));
+        ConfigItem configItem = new ConfigItem(item, index);
+        for (ZMenuHook.AttributeType attributeType : ZMenuHook.AttributeType.values()) {
+            config.set(path + ".item." + attributeType.name()
+                                                     .toLowerCase(Locale.ROOT), attributeType.attribute.apply(configItem));
         }
     }
 
@@ -139,5 +116,36 @@ public class ZMenuHook implements Convertible {
                          .stream()
                          .map(fr.maxlego08.menu.api.Inventory::getFileName)
                          .collect(Collectors.toList());
+    }
+
+    public enum AttributeType {
+        AMOUNT(new AmountAttribute()),
+        DURABILITY(new DurabilityAttribute()),
+        LORE(new LoreAttribute()),
+        MATERIAL(new MaterialAttribute()),
+        NAME(new NameAttribute()),
+        //        NBT_DATA("NBT-DATA", NBTDataAttribute::new),
+        DATA(new DataAttribute()),
+        COLOR(new RGBAttribute(color -> color.getRed() + "," + color.getGreen() + "," + color.getBlue())),
+        SKULL_OWNER(new SkullOwnerAttribute()),
+        BANNER(new BannerColorAttribute()),
+        FLAGS(new ItemFlagsAttribute()),
+        POTION_EFFECTS(new PotionEffectsAttribute(potionEffects -> potionEffects.stream()
+                                                                                .filter(Objects::nonNull)
+                                                                                .map(potionEffect -> potionEffect.getType().getName() + ";" + potionEffect.getDuration() + ";" + potionEffect.getAmplifier())
+                                                                                .collect(Collectors.toList()))),
+        BANNER_PATTERNS(new BannerPatternsAttribute(patterns -> patterns.stream()
+                                                                    .map(pattern -> pattern.getColor().name() + ";" + pattern.getPattern().name())
+                                                                    .collect(Collectors.toList()))),
+        ENCHANTS(new EnchantmentsAttribute(map -> map.entrySet()
+                                                         .stream()
+                                                         .map(entry -> entry.getKey().getKey().getKey() + ";" + entry.getValue())
+                                                         .collect(Collectors.toList())));
+
+        final Attribute attribute;
+
+        AttributeType(Attribute attribute) {
+            this.attribute = attribute;
+        }
     }
 }

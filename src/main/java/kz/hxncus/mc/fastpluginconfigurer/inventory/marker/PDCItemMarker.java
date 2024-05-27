@@ -1,6 +1,6 @@
 package kz.hxncus.mc.fastpluginconfigurer.inventory.marker;
 
-import kz.hxncus.mc.fastpluginconfigurer.util.ItemBuilder;
+import kz.hxncus.mc.fastpluginconfigurer.util.builder.ItemBuilder;
 import lombok.NonNull;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;

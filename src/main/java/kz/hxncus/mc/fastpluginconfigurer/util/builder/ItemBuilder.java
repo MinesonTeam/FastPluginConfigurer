@@ -1,4 +1,4 @@
-package kz.hxncus.mc.fastpluginconfigurer.util;
+package kz.hxncus.mc.fastpluginconfigurer.util.builder;
 
 import lombok.NonNull;
 import org.bukkit.Color;
@@ -18,6 +18,7 @@ import java.util.function.Consumer;
 public class ItemBuilder {
     private final ItemStack itemStack;
     private final ItemMeta itemMeta;
+
     public ItemBuilder(Material material) {
         this(new ItemStack(material));
     }

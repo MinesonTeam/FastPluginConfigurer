@@ -1,6 +1,7 @@
-package kz.hxncus.mc.fastpluginconfigurer.inventory;
+package kz.hxncus.mc.fastpluginconfigurer.manager;
 
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
+import kz.hxncus.mc.fastpluginconfigurer.inventory.FastInventory;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.marker.ItemMarker;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.marker.PDCItemMarker;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.marker.UnavailableItemMarker;

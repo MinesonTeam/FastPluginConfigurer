@@ -3,11 +3,12 @@ package kz.hxncus.mc.fastpluginconfigurer.hook;
 import com.extendedclip.deluxemenus.menu.Menu;
 import com.extendedclip.deluxemenus.menu.MenuHolder;
 import com.extendedclip.deluxemenus.menu.MenuItem;
-import kz.hxncus.mc.fastpluginconfigurer.Constants;
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
-import kz.hxncus.mc.fastpluginconfigurer.converter.Convertible;
-import kz.hxncus.mc.fastpluginconfigurer.language.Messages;
+import kz.hxncus.mc.fastpluginconfigurer.attribute.*;
+import kz.hxncus.mc.fastpluginconfigurer.config.ConfigItem;
+import kz.hxncus.mc.fastpluginconfigurer.util.Constants;
 import kz.hxncus.mc.fastpluginconfigurer.util.FileUtil;
+import kz.hxncus.mc.fastpluginconfigurer.util.Messages;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -17,12 +18,9 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.File;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class DeluxeMenusHook implements Convertible {
@@ -33,11 +31,11 @@ public class DeluxeMenusHook implements Convertible {
     }
 
     @Override
-    public void fileToInventory(Player player, String fileName) {
+    public void convertFileToInventory(Player player, String fileName) {
         Block targetBlock = player.getTargetBlockExact(5);
         BlockState state = targetBlock == null ? null : targetBlock.getState();
         if (!(state instanceof Chest)) {
-            player.sendMessage(Messages.MUST_LOOKING_AT_DOUBLE_CHEST.getMessage());
+            Messages.MUST_LOOKING_AT_DOUBLE_CHEST.sendMessage(player);
             return;
         }
         Menu menu = Menu.getMenu(fileName);
@@ -61,8 +59,8 @@ public class DeluxeMenusHook implements Convertible {
     }
 
     @Override
-    public void inventoryToFile(Player player, String fileName) {
-        File file = new File(plugin.getDirectoryManager().getConverterDirectory(), fileName.endsWith(Constants.YML_EXPANSION) ? fileName : fileName + Constants.YML_EXPANSION);
+    public void convertInventoryToFile(Player player, String fileName) {
+        File file = new File(plugin.getDirectoryManager().getConvertedDir(), fileName.endsWith(Constants.YML_EXPANSION) ? fileName : fileName + Constants.YML_EXPANSION);
         if (file.exists()) {
             Messages.FILE_ALREADY_EXISTS.sendMessage(player, fileName);
             return;
@@ -85,7 +83,7 @@ public class DeluxeMenusHook implements Convertible {
             Messages.CHEST_SUCCESSFULLY_STORED_INTO_FILE.sendMessage(player, fileName);
             return;
         }
-        player.sendMessage(Messages.MUST_LOOKING_AT_DOUBLE_CHEST.getMessage());
+        Messages.MUST_LOOKING_AT_DOUBLE_CHEST.sendMessage(player);
     }
 
     @Override
@@ -102,21 +100,59 @@ public class DeluxeMenusHook implements Convertible {
 
     private void storeItemInConfig(ItemStack item, FileConfiguration config, int count, int index) {
         String path = String.format("items.%s.", count);
-        config.set(path + "material", item.getType().name());
-        if (item.getData().getData() != 0) {
-            config.set(path + "data", item.getData().getData());
+        ConfigItem configItem = new ConfigItem(item, index);
+        for (DeluxeMenusHook.AttributeType attributeType : DeluxeMenusHook.AttributeType.values()) {
+            config.set(path + attributeType.name().toLowerCase(Locale.ROOT), attributeType.attribute.apply(configItem));
         }
-        config.set(path + "amount", item.getAmount());
-        ItemMeta itemMeta = item.getItemMeta();
-        if (itemMeta.hasDisplayName()) {
-            config.set(path + "display_name", itemMeta.getDisplayName());
-        }
-        if (itemMeta.hasLore()) {
-            config.set(path + "lore", itemMeta.getLore());
-        }
-        config.set(path + "slot", index);
-        if (itemMeta.hasEnchants()) {
-            config.set(path + "enchantments", itemMeta.getEnchants().entrySet().stream().map(entry -> entry.getKey().getKey().getKey() + ";" + entry.getValue()).collect(Collectors.toList()));
+
+//        String path = String.format("items.%s.", count);
+//        config.set(path + "material", item.getType().name());
+//        if (item.getData().getData() != 0) {
+//            config.set(path + "data", item.getData().getData());
+//        }
+//        config.set(path + "amount", item.getAmount());
+//        ItemMeta itemMeta = item.getItemMeta();
+//        if (itemMeta.hasDisplayName()) {
+//            config.set(path + "display_name", itemMeta.getDisplayName());
+//        }
+//        if (itemMeta.hasLore()) {
+//            config.set(path + "lore", itemMeta.getLore());
+//        }
+//        config.set(path + "slot", index);
+//        if (itemMeta.hasEnchants()) {
+//            config.set(path + "enchantments", itemMeta.getEnchants().entrySet().stream().map(entry -> entry.getKey().getKey().getKey() + ";" + entry.getValue()).collect(Collectors.toList()));
+//        }
+    }
+
+    public enum AttributeType {
+        AMOUNT(new AmountAttribute()),
+        DURABILITY(new DurabilityAttribute()),
+        LORE(new LoreAttribute()),
+        MATERIAL(new MaterialAttribute()),
+        DISPLAY_NAME(new NameAttribute()),
+        SLOT(new PositionAttribute(slot -> slot)),
+        //        NBT_DATA("NBT-DATA", NBTDataAttribute::new),
+        DATA(new DataAttribute()),
+        RGB(new RGBAttribute(color -> color.getRed() + ", " + color.getGreen() + ", " + color.getBlue())),
+        SKULL_OWNER(new SkullOwnerAttribute()),
+        BASE_COLOR(new BannerColorAttribute()),
+        ITEM_FLAGS(new ItemFlagsAttribute()),
+        POTION_EFFECTS(new PotionEffectsAttribute(potionEffects -> potionEffects.stream()
+                                                                                .filter(Objects::nonNull)
+                                                                                .map(potionEffect -> potionEffect.getType().getName() + ";" + potionEffect.getDuration() + ";" + potionEffect.getAmplifier())
+                                                                                .collect(Collectors.toList()))),
+        BANNER_META(new BannerPatternsAttribute(patterns -> patterns.stream()
+                                                                    .map(pattern -> pattern.getColor().name() + ";" + pattern.getPattern().name())
+                                                                    .collect(Collectors.toList()))),
+        ENCHANTMENTS(new EnchantmentsAttribute(map -> map.entrySet()
+                                                         .stream()
+                                                         .map(entry -> entry.getKey().getKey().getKey() + ";" + entry.getValue())
+                                                         .collect(Collectors.toList())));
+
+        final Attribute attribute;
+
+        AttributeType(Attribute attribute) {
+            this.attribute = attribute;
         }
     }
 }

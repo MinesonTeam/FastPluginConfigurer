@@ -1,9 +1,9 @@
-package kz.hxncus.mc.fastpluginconfigurer.inventory.dupefixer;
+package kz.hxncus.mc.fastpluginconfigurer.listener;
 
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
-import kz.hxncus.mc.fastpluginconfigurer.inventory.InventoryManager;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.marker.ItemMarker;
-import kz.hxncus.mc.fastpluginconfigurer.language.Messages;
+import kz.hxncus.mc.fastpluginconfigurer.manager.InventoryManager;
+import kz.hxncus.mc.fastpluginconfigurer.util.Messages;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import org.bukkit.Bukkit;
@@ -19,10 +19,10 @@ import org.bukkit.inventory.PlayerInventory;
 
 @Getter
 @EqualsAndHashCode
-public class DupeFixer implements Listener {
+public class DupeFixerListener implements Listener {
     private final FastPluginConfigurer plugin;
     private final ItemMarker itemMarker;
-    public DupeFixer(FastPluginConfigurer plugin, InventoryManager inventoryManager) {
+    public DupeFixerListener(FastPluginConfigurer plugin, InventoryManager inventoryManager) {
         this.plugin = plugin;
         this.itemMarker = inventoryManager.getItemMarker();
     }

@@ -22,15 +22,16 @@ public class VersionUtil {
             stringBuilder.append(matcher.group("version").replace(".", ""));
             String patch = matcher.group("patch");
             if (patch == null) {
-                stringBuilder.append("0");
+                stringBuilder.append('0');
             } else {
                 stringBuilder.append(patch.replace(".", ""));
             }
         }
         Integer version = Ints.tryParse(stringBuilder.toString());
-        if (version == null)
+        if (version == null) {
             throw new RuntimeException("Could not retrieve server version!");
-        return version.intValue();
+        }
+        return version;
     }
 
     private Material getSign() {

@@ -1,10 +1,6 @@
-package kz.hxncus.mc.fastpluginconfigurer.converter;
+package kz.hxncus.mc.fastpluginconfigurer.hook;
 
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
-import kz.hxncus.mc.fastpluginconfigurer.hook.BetterGUIHook;
-import kz.hxncus.mc.fastpluginconfigurer.hook.ChestCommandsHook;
-import kz.hxncus.mc.fastpluginconfigurer.hook.DeluxeMenusHook;
-import kz.hxncus.mc.fastpluginconfigurer.hook.ZMenuHook;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -13,8 +9,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 public interface Convertible {
-    void fileToInventory(Player player, String fileName);
-    void inventoryToFile(Player player, String fileName);
+    void convertFileToInventory(Player player, String fileName);
+    void convertInventoryToFile(Player player, String fileName);
     List<String> getAllFileNames();
 
     @Getter
@@ -22,7 +18,7 @@ public interface Convertible {
         BETTER_GUI("BetterGUI", BetterGUIHook.class),
         CHEST_COMMANDS("ChestCommands", ChestCommandsHook.class),
         DELUXE_MENUS("DeluxeMenus", DeluxeMenusHook.class),
-        ZMENU("ZMenu", ZMenuHook.class);
+        ZMENU("zMenu", ZMenuHook.class);
 
         private final String name;
         private final Class<? extends Convertible> clazz;
@@ -36,19 +32,34 @@ public interface Convertible {
         }
 
         public void setConverter() {
-            FastPluginConfigurer instance = FastPluginConfigurer.getInstance();
             if (Bukkit.getPluginManager().getPlugin(name) == null) {
                 return;
             }
             try {
-                converter = clazz.getConstructor(FastPluginConfigurer.class).newInstance(instance);
+                converter = clazz.getConstructor(FastPluginConfigurer.class).newInstance(FastPluginConfigurer.getInstance());
                 isEnabled = true;
             } catch (InvocationTargetException | InstantiationException | IllegalAccessException | NoSuchMethodException e) {
                 converter = null;
                 isEnabled = false;
                 throw new RuntimeException(e);
             }
-            instance.getLogger().info("Hook " + clazz.getName() + " is enabled successfully.");
+            FastPluginConfigurer.getInstance().getLogger().info("Hook " + clazz.getSimpleName() + " is enabled successfully.");
+        }
+
+        public static Converters valueOfIgnoreCase(String name) {
+            for (Convertible.Converters converters : values()) {
+                if (name.equalsIgnoreCase(converters.getName())) {
+                    return converters;
+                }
+            }
+            return null;
+        }
+
+        public static void updateAllConverters() {
+            for (Converters converter : values()) {
+                converter.setConverter();
+            }
+
         }
     }
 }

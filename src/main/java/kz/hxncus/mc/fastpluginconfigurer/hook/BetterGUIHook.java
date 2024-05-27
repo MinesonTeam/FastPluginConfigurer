@@ -1,10 +1,11 @@
 package kz.hxncus.mc.fastpluginconfigurer.hook;
 
-import kz.hxncus.mc.fastpluginconfigurer.Constants;
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
-import kz.hxncus.mc.fastpluginconfigurer.converter.Convertible;
-import kz.hxncus.mc.fastpluginconfigurer.language.Messages;
+import kz.hxncus.mc.fastpluginconfigurer.attribute.*;
+import kz.hxncus.mc.fastpluginconfigurer.config.ConfigItem;
+import kz.hxncus.mc.fastpluginconfigurer.util.Constants;
 import kz.hxncus.mc.fastpluginconfigurer.util.FileUtil;
+import kz.hxncus.mc.fastpluginconfigurer.util.Messages;
 import me.hsgamer.bettergui.BetterGUI;
 import me.hsgamer.bettergui.api.menu.Menu;
 import me.hsgamer.bettergui.lib.core.bukkit.gui.object.BukkitItem;
@@ -21,13 +22,9 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class BetterGUIHook implements Convertible {
@@ -38,11 +35,11 @@ public class BetterGUIHook implements Convertible {
     }
 
     @Override
-    public void fileToInventory(Player player, String fileName) {
+    public void convertFileToInventory(Player player, String fileName) {
         Block targetBlock = player.getTargetBlockExact(5);
         BlockState state = targetBlock == null ? null : targetBlock.getState();
         if (!(state instanceof Chest)) {
-            player.sendMessage(Messages.MUST_LOOKING_AT_DOUBLE_CHEST.getMessage());
+            Messages.MUST_LOOKING_AT_DOUBLE_CHEST.sendMessage(player);
             return;
         }
         Menu menu = BetterGUI.getInstance().getMenuManager().getMenu(fileName);
@@ -71,8 +68,8 @@ public class BetterGUIHook implements Convertible {
     }
 
     @Override
-    public void inventoryToFile(Player player, String fileName) {
-        File file = new File(plugin.getDirectoryManager().getConverterDirectory(), fileName.endsWith(Constants.YML_EXPANSION) ? fileName : fileName + Constants.YML_EXPANSION);
+    public void convertInventoryToFile(Player player, String fileName) {
+        File file = new File(plugin.getDirectoryManager().getConvertedDir(), fileName.endsWith(Constants.YML_EXPANSION) ? fileName : fileName + Constants.YML_EXPANSION);
         if (file.exists()) {
             Messages.FILE_ALREADY_EXISTS.sendMessage(player, fileName);
             return;
@@ -95,7 +92,7 @@ public class BetterGUIHook implements Convertible {
             Messages.CHEST_SUCCESSFULLY_STORED_INTO_FILE.sendMessage(player, fileName);
             return;
         }
-        player.sendMessage(Messages.MUST_LOOKING_AT_DOUBLE_CHEST.getMessage());
+        Messages.MUST_LOOKING_AT_DOUBLE_CHEST.sendMessage(player);
     }
 
     private void configureInventory(String fileName, FileConfiguration config, Inventory chestInventory) {
@@ -105,31 +102,57 @@ public class BetterGUIHook implements Convertible {
     }
 
     private void storeItemInConfig(ItemStack item, FileConfiguration config, int count, int index) {
-        ItemMeta itemMeta = item.getItemMeta();
-        if (itemMeta != null) {
-            String itemNamePath = count + ".NAME";
-            if (itemMeta.hasDisplayName()) {
-                config.set(itemNamePath, itemMeta.getDisplayName());
-            } else {
-                config.set(itemNamePath, itemMeta.getLocalizedName());
-            }
-            if (itemMeta.hasLore()) {
-                config.set(count + ".LORE", itemMeta.getLore());
-            }
-            if (itemMeta.hasEnchants()) {
-                config.set(count + ".ENCHANTMENT", itemMeta.getEnchants().entrySet().stream()
-                                                           .map(entry -> entry.getKey().getKey().getKey() + ", " + entry.getValue())
-                                                           .collect(Collectors.toList()));
-            }
+        ConfigItem configItem = new ConfigItem(item, index);
+        for (BetterGUIHook.AttributeType attributeType : BetterGUIHook.AttributeType.values()) {
+            config.set(count + "." + attributeType.name().replace('_', '-'), attributeType.attribute.apply(configItem));
         }
-        config.set(count + ".ID", String.format("%s%s", item.getType().name(), item.getDurability() == 0 ? "" : ":" + item.getDurability()));
-        config.set(count + ".AMOUNT", item.getAmount());
-        config.set(count + ".POSITION-X", index % 9 + 1);
-        config.set(count + ".POSITION-Y", index / 9 + 1);
+//                config.set(itemNamePath, itemMeta.getDisplayName());
+//                config.set(itemNamePath, itemMeta.getLocalizedName());
+//                config.set(count + ".LORE", itemMeta.getLore());
+//                config.set(count + ".ENCHANTMENT", itemMeta.getEnchants().entrySet().stream()
+//                                                           .map(entry -> entry.getKey().getKey().getKey() + ", " + entry.getValue())
+//                                                           .collect(Collectors.toList()));
+//        config.set(count + ".ID", String.format("%s%s", item.getType().name(), item.getDurability() == 0 ? "" : ":" + item.getDurability()));
+//        config.set(count + ".AMOUNT", item.getAmount());
+//        config.set(count + ".POSITION-X", index % 9 + 1);
+//        config.set(count + ".POSITION-Y", index / 9 + 1);
     }
 
     @Override
     public List<String> getAllFileNames() {
         return new ArrayList<>(BetterGUI.getInstance().getMenuManager().getMenuNames());
+    }
+
+    public enum AttributeType {
+        AMOUNT(new AmountAttribute()),
+        DURABILITY(new DurabilityAttribute()),
+        LORE(new LoreAttribute()),
+        MATERIAL(new MaterialAttribute()),
+        NAME(new NameAttribute()),
+        SLOT(new PositionAttribute(slot -> slot)),
+        POSITION_X(new PositionAttribute(slot -> slot % 9 + 1)),
+        POSITION_Y(new PositionAttribute(slot -> slot / 9 + 1)),
+        //        NBT_DATA("NBT-DATA", NBTDataAttribute::new),
+        DATA(new DataAttribute()),
+        SKULL_OWNER(new SkullOwnerAttribute()),
+        BASE_COLOR(new BannerColorAttribute()),
+        ITEM_FLAGS(new ItemFlagsAttribute()),
+        POTION(new PotionEffectsAttribute(potionEffects -> potionEffects.stream()
+                                                                                .filter(Objects::nonNull)
+                                                                                .map(potionEffect -> potionEffect.getType().getName() + ", " + potionEffect.getDuration() + ", " + potionEffect.getAmplifier())
+                                                                                .collect(Collectors.toList()))),
+        BANNER_META(new BannerPatternsAttribute(patterns -> patterns.stream()
+                                                                    .map(pattern -> pattern.getColor().name() + ";" + pattern.getPattern().name())
+                                                                    .collect(Collectors.toList()))),
+        ENCHANTMENT(new EnchantmentsAttribute(map -> map.entrySet()
+                                                         .stream()
+                                                         .map(entry -> entry.getKey().getKey().getKey() + ", " + entry.getValue())
+                                                         .collect(Collectors.toList())));
+
+        final Attribute attribute;
+
+        AttributeType(Attribute attribute) {
+            this.attribute = attribute;
+        }
     }
 }

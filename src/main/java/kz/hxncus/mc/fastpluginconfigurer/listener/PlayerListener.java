@@ -1,10 +1,9 @@
 package kz.hxncus.mc.fastpluginconfigurer.listener;
 
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
-import kz.hxncus.mc.fastpluginconfigurer.fast.FastPlayer;
-import kz.hxncus.mc.fastpluginconfigurer.language.Messages;
+import kz.hxncus.mc.fastpluginconfigurer.config.ConfigSession;
 import kz.hxncus.mc.fastpluginconfigurer.util.FileUtil;
-import org.apache.commons.lang.math.NumberUtils;
+import kz.hxncus.mc.fastpluginconfigurer.util.NumberUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -14,7 +13,6 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,50 +25,37 @@ public class PlayerListener implements Listener {
         this.plugin = plugin;
     }
 
-    private void openLastClosedInventory(FastPlayer fastPlayer, Player player, File file) {
-        String pluginName = fastPlayer.getLastPluginName();
-        if (pluginName != null) {
-            Bukkit.getScheduler().runTask(plugin, () -> Bukkit.dispatchCommand(player, String.format("fpc config %s %s", pluginName, file.getName())));
-        }
+    private void openLastClosedInventory(Player player, ConfigSession session, File file) {
+        openLastClosedInventory(player, session.getPluginName(), file.getName());
+    }
+
+    private void openLastClosedInventory(Player player, String pluginName, String fileName) {
+        Bukkit.getScheduler().runTask(plugin, () -> Bukkit.dispatchCommand(player, String.format("fpc config %s %s", pluginName, fileName)));
     }
 
     @EventHandler
     public void onPlayerChatEvent(AsyncPlayerChatEvent event) {
         Player player = event.getPlayer();
-        FastPlayer fastPlayer = FastPluginConfigurer.getFastPlayer(player.getUniqueId());
-        if (!fastPlayer.isChatAddKey() && !fastPlayer.isChatSetKey()) {
+        ConfigSession configSession = FastPluginConfigurer.getConfigSession(player.getUniqueId());
+        ConfigSession.Chat chat = configSession.getChat();
+        if (chat == ConfigSession.Chat.NOTHING) {
             return;
         }
-        File file = fastPlayer.getFile();
-        if (!file.exists()) {
-            try {
-                if (file.getParentFile().mkdirs()) {
-                    file.createNewFile();
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
+        File file = configSession.getFile();
+        configSession.setChat(ConfigSession.Chat.NOTHING);
+        openLastClosedInventory(player, configSession, file);
         String message = event.getMessage();
         if ("cancel".equalsIgnoreCase(message)) {
-            fastPlayer.setChatSetKey(false);
-            openLastClosedInventory(fastPlayer, player, file);
-        }
-        String path = fastPlayer.getPath();
-        if (path == null) {
-            player.sendMessage(Messages.INVALID_PATH.getMessage());
             return;
         }
+        String path = configSession.getKeyPath();
         YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-        if (fastPlayer.isChatAddKey()) {
+        if (chat == ConfigSession.Chat.ADDING_NEW_KEY) {
             config.set(path.isEmpty() ? message : path + "." + message, "");
-        } else if (fastPlayer.isChatSetKey()) {
+        } else if (chat == ConfigSession.Chat.SETTING_KEY_VALUE) {
             config.set(path, convert(message));
         }
         FileUtil.reload(config, file);
-        fastPlayer.setChatAddKey(false);
-        fastPlayer.setChatSetKey(false);
-        openLastClosedInventory(fastPlayer, player, file);
         event.setCancelled(true);
     }
 
@@ -93,14 +78,15 @@ public class PlayerListener implements Listener {
             return objects;
         } else if (isMessageQuoted(message)) {
             return message.substring(1, message.length() - 1);
-        } else if (NumberUtils.isNumber(message)) {
+        } else if (NumberUtils.isCreatable(message)) {
             return NumberUtils.createNumber(message);
         } else if ("true".equalsIgnoreCase(message)) {
             return true;
         } else if ("false".equalsIgnoreCase(message)) {
             return false;
         }
-        return message;
+        String[] split = message.split("\\\\n");
+        return split.length < 2 ? message : split;
     }
 
     public boolean isMessageQuoted(String message) {
@@ -110,6 +96,6 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        FastPluginConfigurer.removePlayer(event.getPlayer().getUniqueId());
+        FastPluginConfigurer.removeSession(event.getPlayer().getUniqueId());
     }
 }
