@@ -26,36 +26,33 @@ public class PlayerListener implements Listener {
     }
 
     private void openLastClosedInventory(Player player, ConfigSession session, File file) {
-        openLastClosedInventory(player, session.getPluginName(), file.getName());
+        openLastClosedInventory(player, session.getPluginName(), file.getPath());
     }
 
-    private void openLastClosedInventory(Player player, String pluginName, String fileName) {
-        Bukkit.getScheduler().runTask(plugin, () -> Bukkit.dispatchCommand(player, String.format("fpc config %s %s", pluginName, fileName)));
+    private void openLastClosedInventory(Player player, String pluginName, String filePath) {
+        Bukkit.getScheduler().runTask(plugin, () -> Bukkit.dispatchCommand(player, String.format("fpc config %s %s", pluginName, filePath.replaceFirst(String.format("plugins\\\\%s\\\\", pluginName), ""))));
     }
 
     @EventHandler
     public void onPlayerChatEvent(AsyncPlayerChatEvent event) {
         Player player = event.getPlayer();
         ConfigSession configSession = FastPluginConfigurer.getConfigSession(player.getUniqueId());
-        ConfigSession.Chat chat = configSession.getChat();
-        if (chat == ConfigSession.Chat.NOTHING) {
+        if (configSession.getChat() == ConfigSession.Chat.NOTHING) {
             return;
         }
-        File file = configSession.getFile();
         configSession.setChat(ConfigSession.Chat.NOTHING);
-        openLastClosedInventory(player, configSession, file);
+        openLastClosedInventory(player, configSession, configSession.getFile());
         String message = event.getMessage();
         if ("cancel".equalsIgnoreCase(message)) {
             return;
         }
-        String path = configSession.getKeyPath();
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-        if (chat == ConfigSession.Chat.ADDING_NEW_KEY) {
-            config.set(path.isEmpty() ? message : path + "." + message, "");
-        } else if (chat == ConfigSession.Chat.SETTING_KEY_VALUE) {
-            config.set(path, convert(message));
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(configSession.getFile());
+        if (configSession.getChat() == ConfigSession.Chat.ADDING_NEW_KEY) {
+            config.set(configSession.getKeyPath().isEmpty() ? message : configSession.getKeyPath() + "." + message, "");
+        } else if (configSession.getChat() == ConfigSession.Chat.SETTING_KEY_VALUE) {
+            config.set(configSession.getKeyPath(), convert(message));
         }
-        FileUtil.reload(config, file);
+        FileUtil.reload(config, configSession.getFile());
         event.setCancelled(true);
     }
 

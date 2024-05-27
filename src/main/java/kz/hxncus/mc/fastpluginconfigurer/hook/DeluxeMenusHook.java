@@ -9,6 +9,7 @@ import kz.hxncus.mc.fastpluginconfigurer.config.ConfigItem;
 import kz.hxncus.mc.fastpluginconfigurer.util.Constants;
 import kz.hxncus.mc.fastpluginconfigurer.util.FileUtil;
 import kz.hxncus.mc.fastpluginconfigurer.util.Messages;
+import kz.hxncus.mc.fastpluginconfigurer.util.VersionUtil;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -32,7 +33,7 @@ public class DeluxeMenusHook implements Convertible {
 
     @Override
     public void convertFileToInventory(Player player, String fileName) {
-        Block targetBlock = player.getTargetBlockExact(5);
+        Block targetBlock = VersionUtil.getTargetBlock(player, 5);
         BlockState state = targetBlock == null ? null : targetBlock.getState();
         if (!(state instanceof Chest)) {
             Messages.MUST_LOOKING_AT_DOUBLE_CHEST.sendMessage(player);
@@ -65,7 +66,7 @@ public class DeluxeMenusHook implements Convertible {
             Messages.FILE_ALREADY_EXISTS.sendMessage(player, fileName);
             return;
         }
-        Block targetBlock = player.getTargetBlockExact(5);
+        Block targetBlock = VersionUtil.getTargetBlock(player, 5);
         BlockState state = targetBlock == null ? null : targetBlock.getState();
         if (state instanceof Chest) {
             Inventory chestInventory = ((Chest) state).getInventory();
@@ -104,24 +105,6 @@ public class DeluxeMenusHook implements Convertible {
         for (DeluxeMenusHook.AttributeType attributeType : DeluxeMenusHook.AttributeType.values()) {
             config.set(path + attributeType.name().toLowerCase(Locale.ROOT), attributeType.attribute.apply(configItem));
         }
-
-//        String path = String.format("items.%s.", count);
-//        config.set(path + "material", item.getType().name());
-//        if (item.getData().getData() != 0) {
-//            config.set(path + "data", item.getData().getData());
-//        }
-//        config.set(path + "amount", item.getAmount());
-//        ItemMeta itemMeta = item.getItemMeta();
-//        if (itemMeta.hasDisplayName()) {
-//            config.set(path + "display_name", itemMeta.getDisplayName());
-//        }
-//        if (itemMeta.hasLore()) {
-//            config.set(path + "lore", itemMeta.getLore());
-//        }
-//        config.set(path + "slot", index);
-//        if (itemMeta.hasEnchants()) {
-//            config.set(path + "enchantments", itemMeta.getEnchants().entrySet().stream().map(entry -> entry.getKey().getKey().getKey() + ";" + entry.getValue()).collect(Collectors.toList()));
-//        }
     }
 
     public enum AttributeType {
@@ -146,7 +129,7 @@ public class DeluxeMenusHook implements Convertible {
                                                                     .collect(Collectors.toList()))),
         ENCHANTMENTS(new EnchantmentsAttribute(map -> map.entrySet()
                                                          .stream()
-                                                         .map(entry -> entry.getKey().getKey().getKey() + ";" + entry.getValue())
+                                                         .map(entry -> VersionUtil.getEnchantmentName(entry.getKey()) + ";" + entry.getValue())
                                                          .collect(Collectors.toList())));
 
         final Attribute attribute;

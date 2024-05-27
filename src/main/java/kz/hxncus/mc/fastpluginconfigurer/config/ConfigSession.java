@@ -32,6 +32,6 @@ public class ConfigSession {
     }
 
     public enum Chat {
-        NOTHING, ADDING_NEW_KEY, SETTING_KEY_VALUE;
+        NOTHING, ADDING_NEW_KEY, SETTING_KEY_VALUE
     }
 }

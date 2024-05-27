@@ -14,7 +14,7 @@ current_value: "§7Current value:"
 empty_value: "§o§mempty value"
 # %s - is key value.
 value: "§8▪ §e%s"
-write_value_in_chat: "{PREFIX} Write a value for path §e%s§r in the chat or write \"cancel\" to cancel."
+write_value_in_chat: "{PREFIX} Write a value for key §e%s§r in the chat or write \"cancel\" to cancel."
 value_too_long: "{PREFIX} The value is too long to be copied. Please change the value in the config."
 click_message_to_copy_value: "{PREFIX} Open the chat, then click this message to copy this value: %s"
 help: "{PREFIX} help:"

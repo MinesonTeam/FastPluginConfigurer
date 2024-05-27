@@ -31,6 +31,9 @@ public class Constants {
                     SUPPORTED_LANGUAGES.add(file.getParentFile().getName() + "\\" + file.getName());
                 }
             }
+            if (files.length == 0) {
+                SUPPORTED_LANGUAGES.addAll(List.of("translations\\en.yml", "translations\\ru.yml", "translations\\ua.yml"));
+            }
         }
         FILES.addAll(SUPPORTED_LANGUAGES);
     }

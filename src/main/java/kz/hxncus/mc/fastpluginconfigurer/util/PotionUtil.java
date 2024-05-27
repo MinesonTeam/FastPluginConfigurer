@@ -9,8 +9,8 @@ import org.bukkit.potion.PotionType;
 
 @UtilityClass
 public class PotionUtil {
-    public PotionEffect getPotionEffect(PotionMeta pm) {
-        PotionData potionData = pm.getBasePotionData();
+    public PotionEffect getPotionEffect(PotionMeta potionMeta) {
+        PotionData potionData = potionMeta.getBasePotionData();
         PotionType potionType = potionData.getType();
         PotionEffectType potionEffectType = potionType.getEffectType();
         if (potionEffectType == null) {
@@ -27,7 +27,8 @@ public class PotionUtil {
             duration *= negative ? 1.5 : 3;
         } else if (!extended && upgraded && !irregular) {
             duration = negative ? duration / 3 : duration * 1.5;
-            amplifier = negative ? 3 : 1; // hard code slowness 4 in because its the only negative semi-irregular potion effect
+            // Hard code slowness 4 because its only negative semi-irregular potion
+            amplifier = negative ? 3 : 1;
         } else if (extended && !upgraded && !irregular) {
             duration *= negative ? 4 : 8;
         } else if (potionType.equals(PotionType.REGEN) || potionType.equals(PotionType.POISON)) {
@@ -47,14 +48,16 @@ public class PotionUtil {
         } else if (potionType.equals(PotionType.LUCK)) {
             duration *= 5;
         } else if (potionType.equals(PotionType.TURTLE_MASTER)) {
-            return null; // make sure in your method you do something about this. Since turtle master gives two potion effects, you have to handle this outside of this method.
+            // Make sure in your method you do something about this.
+            // Since turtle master has two effects, you have to handle outside this method.
+            return null;
         }
         return new PotionEffect(potionEffectType, (int) duration, amplifier);
     }
 
 
     public boolean isNegative(PotionEffectType pet) {
-        for(PotionType type : getNegativePotions()) {
+        for (PotionType type : getNegativePotions()) {
             if (type.getEffectType().equals(pet)) {
                 return true;
             }
@@ -69,7 +72,7 @@ public class PotionUtil {
 
 
     public boolean isIrregular(PotionEffectType pet) {
-        for(PotionType type : getIrregularPotions()) {
+        for (PotionType type : getIrregularPotions()) {
             if (type.getEffectType().equals(pet)) {
                 return true;
             }
@@ -82,7 +85,7 @@ public class PotionUtil {
     }
 
     public boolean isUnusable(PotionType type) {
-        for(PotionType pt : getUnusable()) {
+        for (PotionType pt : getUnusable()) {
             if (pt.equals(type)) {
                 return true;
             }

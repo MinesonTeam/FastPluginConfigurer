@@ -6,7 +6,7 @@ import org.bukkit.Color;
 import java.util.function.Function;
 
 public class RGBAttribute implements Attribute {
-    Function<Color, String> function;
+    private final Function<Color, String> function;
 
     public RGBAttribute(Function<Color, String> function) {
         this.function = function;

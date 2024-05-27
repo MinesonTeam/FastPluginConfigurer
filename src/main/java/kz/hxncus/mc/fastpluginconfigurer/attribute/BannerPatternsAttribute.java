@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.function.Function;
 
 public class BannerPatternsAttribute implements Attribute {
-    Function<List<Pattern>, List<String>> function;
+    private final Function<List<Pattern>, List<String>> function;
 
     public BannerPatternsAttribute(Function<List<Pattern>, List<String>> function) {
         this.function = function;

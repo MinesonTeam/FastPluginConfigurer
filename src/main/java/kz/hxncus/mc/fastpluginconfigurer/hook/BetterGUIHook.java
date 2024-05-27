@@ -6,6 +6,7 @@ import kz.hxncus.mc.fastpluginconfigurer.config.ConfigItem;
 import kz.hxncus.mc.fastpluginconfigurer.util.Constants;
 import kz.hxncus.mc.fastpluginconfigurer.util.FileUtil;
 import kz.hxncus.mc.fastpluginconfigurer.util.Messages;
+import kz.hxncus.mc.fastpluginconfigurer.util.VersionUtil;
 import me.hsgamer.bettergui.BetterGUI;
 import me.hsgamer.bettergui.api.menu.Menu;
 import me.hsgamer.bettergui.lib.core.bukkit.gui.object.BukkitItem;
@@ -36,7 +37,7 @@ public class BetterGUIHook implements Convertible {
 
     @Override
     public void convertFileToInventory(Player player, String fileName) {
-        Block targetBlock = player.getTargetBlockExact(5);
+        Block targetBlock = VersionUtil.getTargetBlock(player, 5);
         BlockState state = targetBlock == null ? null : targetBlock.getState();
         if (!(state instanceof Chest)) {
             Messages.MUST_LOOKING_AT_DOUBLE_CHEST.sendMessage(player);
@@ -74,7 +75,7 @@ public class BetterGUIHook implements Convertible {
             Messages.FILE_ALREADY_EXISTS.sendMessage(player, fileName);
             return;
         }
-        Block targetBlock = player.getTargetBlockExact(5);
+        Block targetBlock = VersionUtil.getTargetBlock(player, 5);
         BlockState state = targetBlock == null ? null : targetBlock.getState();
         if (state instanceof Chest) {
             Inventory chestInventory = ((Chest) state).getInventory();
@@ -106,16 +107,6 @@ public class BetterGUIHook implements Convertible {
         for (BetterGUIHook.AttributeType attributeType : BetterGUIHook.AttributeType.values()) {
             config.set(count + "." + attributeType.name().replace('_', '-'), attributeType.attribute.apply(configItem));
         }
-//                config.set(itemNamePath, itemMeta.getDisplayName());
-//                config.set(itemNamePath, itemMeta.getLocalizedName());
-//                config.set(count + ".LORE", itemMeta.getLore());
-//                config.set(count + ".ENCHANTMENT", itemMeta.getEnchants().entrySet().stream()
-//                                                           .map(entry -> entry.getKey().getKey().getKey() + ", " + entry.getValue())
-//                                                           .collect(Collectors.toList()));
-//        config.set(count + ".ID", String.format("%s%s", item.getType().name(), item.getDurability() == 0 ? "" : ":" + item.getDurability()));
-//        config.set(count + ".AMOUNT", item.getAmount());
-//        config.set(count + ".POSITION-X", index % 9 + 1);
-//        config.set(count + ".POSITION-Y", index / 9 + 1);
     }
 
     @Override
@@ -139,14 +130,14 @@ public class BetterGUIHook implements Convertible {
         ITEM_FLAGS(new ItemFlagsAttribute()),
         POTION(new PotionEffectsAttribute(potionEffects -> potionEffects.stream()
                                                                                 .filter(Objects::nonNull)
-                                                                                .map(potionEffect -> potionEffect.getType().getName() + ", " + potionEffect.getDuration() + ", " + potionEffect.getAmplifier())
+                                                                                .map(potionEffect -> potionEffect.getType().getName() + ", " + potionEffect.getDuration() / 20 + ", " + potionEffect.getAmplifier())
                                                                                 .collect(Collectors.toList()))),
         BANNER_META(new BannerPatternsAttribute(patterns -> patterns.stream()
                                                                     .map(pattern -> pattern.getColor().name() + ";" + pattern.getPattern().name())
                                                                     .collect(Collectors.toList()))),
         ENCHANTMENT(new EnchantmentsAttribute(map -> map.entrySet()
                                                          .stream()
-                                                         .map(entry -> entry.getKey().getKey().getKey() + ", " + entry.getValue())
+                                                         .map(entry -> VersionUtil.getEnchantmentName(entry.getKey()) + ", " + entry.getValue())
                                                          .collect(Collectors.toList())));
 
         final Attribute attribute;

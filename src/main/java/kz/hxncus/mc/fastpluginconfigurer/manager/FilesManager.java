@@ -40,16 +40,19 @@ public class FilesManager {
             File file = new File(plugin.getDataFolder(), filePath);
             FileConfiguration config = YamlConfiguration.loadConfiguration(file);
 
-            InputStream resource = plugin.getResource(filePath.replace('\\', '/'));
-            FileConfiguration embeddedConfig = YamlConfiguration.loadConfiguration(new InputStreamReader(resource));
-
-            config.options().copyDefaults(true);
-            config.setDefaults(embeddedConfig);
-            if (filePath.equals("config.yml")) {
-                config.set(Constants.VERSION, embeddedConfig.getInt(Constants.VERSION, 0));
+            try (InputStream resource = plugin.getResource(filePath.replace('\\', '/'))) {
+                FileConfiguration embeddedConfig = YamlConfiguration.loadConfiguration(new InputStreamReader(resource));
+                config.options()
+                      .copyDefaults(true);
+                config.setDefaults(embeddedConfig);
+                if ("config.yml".equals(filePath)) {
+                    config.set(Constants.VERSION, embeddedConfig.getInt(Constants.VERSION, 0));
+                }
+                removeNonexistentKeys(config, embeddedConfig);
+                saveConfig(config, file);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-            removeNonexistentKeys(config, embeddedConfig);
-            saveConfig(config, file);
         }
         plugin.getLogger().info("Files has been updated!");
     }

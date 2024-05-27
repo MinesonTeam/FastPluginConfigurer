@@ -34,7 +34,9 @@ public class FPCCommand extends AbstractCommand {
     public void execute(CommandSender sender, Command command, String label, String... args) {
         if (!(sender instanceof Player)) {
             Messages.MUST_BE_PLAYER.sendMessage(sender);
-        } else if (args.length < 1) {
+            return;
+        }
+        if (args.length < 1) {
             sendHelpMessage(sender, label);
         } else if (Constants.INVENTORY_TO_FILE.equalsIgnoreCase(args[0]) || Constants.FILE_TO_INVENTORY.equalsIgnoreCase(args[0])) {
             inventorySubCommand(sender, label, args);
@@ -78,13 +80,11 @@ public class FPCCommand extends AbstractCommand {
             Messages.PLUGIN_DOES_NOT_EXIST.sendMessage(humanEntity);
             return;
         }
-        targetPlugin.reloadConfig();
-        String path = targetPlugin.getDataFolder().getPath() + File.separator;
         File file;
         if (args.length < 3) {
-            file = new File(path + "config.yml");
+            file = new File(targetPlugin.getDataFolder(), "config.yml");
         } else {
-            file = new File(path + args[2]);
+            file = new File(targetPlugin.getDataFolder(), args[2]);
         }
         if (!file.exists()) {
             Messages.FILE_DOES_NOT_EXIST.sendMessage(humanEntity, file.getName());
@@ -95,6 +95,7 @@ public class FPCCommand extends AbstractCommand {
         configSession.setPluginName(args[1]);
 
         FileConfiguration config = YamlConfiguration.loadConfiguration(file);
+        FileUtil.reload(config, file);
         BasicFastInventory fastInventory = createFastInventory(args[1]);
 
         setupConfigInventories(config.getKeys(false).iterator(), fastInventory, config, args[1]);

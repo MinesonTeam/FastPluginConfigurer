@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 public class EnchantmentsAttribute implements Attribute {
-    Function<Map<Enchantment, Integer>, List<String>> function;
+    private final Function<Map<Enchantment, Integer>, List<String>> function;
 
     public EnchantmentsAttribute(Function<Map<Enchantment, Integer>, List<String>> function) {
         this.function = function;

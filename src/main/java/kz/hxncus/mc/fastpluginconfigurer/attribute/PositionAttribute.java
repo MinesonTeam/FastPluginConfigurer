@@ -5,7 +5,7 @@ import kz.hxncus.mc.fastpluginconfigurer.config.ConfigItem;
 import java.util.function.UnaryOperator;
 
 public class PositionAttribute implements Attribute {
-    UnaryOperator<Integer> function;
+    private final UnaryOperator<Integer> function;
 
     public PositionAttribute(UnaryOperator<Integer> function) {
         this.function = function;

@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.function.Function;
 
 public class PotionEffectsAttribute implements Attribute {
-    Function<List<PotionEffect>, List<String>> function;
+    private final Function<List<PotionEffect>, List<String>> function;
 
     public PotionEffectsAttribute(Function<List<PotionEffect>, List<String>> function) {
         this.function = function;
