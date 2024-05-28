@@ -8,7 +8,6 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.util.BlockIterator;
 
-import javax.annotation.Nullable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,7 +50,6 @@ public class VersionUtil {
         }
     }
 
-    @Nullable
     public Block getTargetBlock(Player player, int distance) {
         if (IS_TARGET_BLOCK_VERSION) {
             return player.getTargetBlockExact(distance);

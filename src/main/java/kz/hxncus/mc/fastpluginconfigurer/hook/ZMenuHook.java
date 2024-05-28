@@ -8,29 +8,21 @@ import fr.maxlego08.menu.api.pattern.Pattern;
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
 import kz.hxncus.mc.fastpluginconfigurer.attribute.*;
 import kz.hxncus.mc.fastpluginconfigurer.config.ConfigItem;
-import kz.hxncus.mc.fastpluginconfigurer.util.Constants;
-import kz.hxncus.mc.fastpluginconfigurer.util.FileUtil;
 import kz.hxncus.mc.fastpluginconfigurer.util.Messages;
 import kz.hxncus.mc.fastpluginconfigurer.util.VersionUtil;
-import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
 
-import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class ZMenuHook implements Convertible {
-    public final FastPluginConfigurer plugin;
-
+public class ZMenuHook extends AbstractHook {
     public ZMenuHook(final FastPluginConfigurer plugin) {
-        this.plugin = plugin;
+        super(plugin);
     }
 
     @Override
@@ -70,44 +62,17 @@ public class ZMenuHook implements Convertible {
     }
 
     @Override
-    public void convertInventoryToFile(Player player, String fileName) {
-        File file = new File(plugin.getDirectoryManager().getConvertedDir(), fileName.endsWith(Constants.YML_EXPANSION) ? fileName : fileName + Constants.YML_EXPANSION);
-        if (file.exists()) {
-            Messages.FILE_ALREADY_EXISTS.sendMessage(player, fileName);
-            return;
-        }
-        Block targetBlock = VersionUtil.getTargetBlock(player, 5);
-        BlockState state = targetBlock == null ? null : targetBlock.getState();
-        if (state instanceof Chest) {
-            Inventory chestInventory = ((Chest) state).getInventory();
-            FileConfiguration config = YamlConfiguration.loadConfiguration(file);
-            configureInventory(fileName, config, chestInventory);
-            int count = 0;
-            for (int i = 0; i < chestInventory.getSize(); i++) {
-                ItemStack item = chestInventory.getItem(i);
-                if (item == null || item.getType() == Material.AIR) {
-                    continue;
-                }
-                storeItemInConfig(item, config, count++, i);
-            }
-            FileUtil.reload(config, file);
-            Messages.CHEST_SUCCESSFULLY_STORED_INTO_FILE.sendMessage(player, fileName);
-            return;
-        }
-        Messages.MUST_LOOKING_AT_DOUBLE_CHEST.sendMessage(player);
-    }
-    private void configureInventory(String fileName, FileConfiguration config, Inventory chestInventory) {
+    public void configureInventory(String fileName, FileConfiguration config, Inventory chestInventory) {
         config.set("name", fileName);
         config.set("size", chestInventory.getSize());
     }
 
-    private void storeItemInConfig(ItemStack item, FileConfiguration config, int count, int index) {
+    @Override
+    public void storeItemInConfig(FileConfiguration config, ConfigItem configItem, int count) {
         String path = String.format("items.%s.", count);
-        config.set(path + "slot", index);
-        ConfigItem configItem = new ConfigItem(item, index);
+        config.set(path + "slot", configItem.getIndex());
         for (ZMenuHook.AttributeType attributeType : ZMenuHook.AttributeType.values()) {
-            config.set(path + ".item." + attributeType.name()
-                                                     .toLowerCase(Locale.ROOT), attributeType.attribute.apply(configItem));
+            config.set(path + ".item." + attributeType.name().toLowerCase(Locale.ROOT), attributeType.attribute.apply(configItem));
         }
     }
 
@@ -140,7 +105,7 @@ public class ZMenuHook implements Convertible {
                                                                     .collect(Collectors.toList()))),
         ENCHANTS(new EnchantmentsAttribute(map -> map.entrySet()
                                                          .stream()
-                                                         .map(entry -> VersionUtil.getEnchantmentName(entry.getKey()) + ";" + entry.getValue())
+                                                         .map(entry -> VersionUtil.getEnchantmentName(entry.getKey()).toUpperCase(Locale.ROOT) + ";" + entry.getValue())
                                                          .collect(Collectors.toList())));
 
         final Attribute attribute;

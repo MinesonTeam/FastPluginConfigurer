@@ -24,11 +24,9 @@ import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class DeluxeMenusHook implements Convertible {
-    public final FastPluginConfigurer plugin;
-
+public class DeluxeMenusHook extends AbstractHook {
     public DeluxeMenusHook(FastPluginConfigurer plugin) {
-        this.plugin = plugin;
+        super(plugin);
     }
 
     @Override
@@ -68,23 +66,23 @@ public class DeluxeMenusHook implements Convertible {
         }
         Block targetBlock = VersionUtil.getTargetBlock(player, 5);
         BlockState state = targetBlock == null ? null : targetBlock.getState();
-        if (state instanceof Chest) {
-            Inventory chestInventory = ((Chest) state).getInventory();
-            FileConfiguration config = YamlConfiguration.loadConfiguration(file);
-            configureInventory(fileName, config, chestInventory);
-            int count = 0;
-            for (int i = 0; i < chestInventory.getSize(); i++) {
-                ItemStack item = chestInventory.getItem(i);
-                if (item == null || item.getType() == Material.AIR) {
-                    continue;
-                }
-                storeItemInConfig(item, config, count++, i);
-            }
-            FileUtil.reload(config, file);
-            Messages.CHEST_SUCCESSFULLY_STORED_INTO_FILE.sendMessage(player, fileName);
+        if (!(state instanceof Chest)) {
+            Messages.MUST_LOOKING_AT_DOUBLE_CHEST.sendMessage(player);
             return;
         }
-        Messages.MUST_LOOKING_AT_DOUBLE_CHEST.sendMessage(player);
+        Inventory chestInventory = ((Chest) state).getInventory();
+        FileConfiguration config = YamlConfiguration.loadConfiguration(file);
+        configureInventory(fileName, config, chestInventory);
+        int count = 0;
+        for (int i = 0; i < chestInventory.getSize(); i++) {
+            ItemStack item = chestInventory.getItem(i);
+            if (item == null || item.getType() == Material.AIR) {
+                continue;
+            }
+            storeItemInConfig(config, new ConfigItem(item, i), count++);
+        }
+        FileUtil.reload(config, file);
+        Messages.CHEST_SUCCESSFULLY_STORED_INTO_FILE.sendMessage(player, fileName);
     }
 
     @Override
@@ -92,17 +90,18 @@ public class DeluxeMenusHook implements Convertible {
         return Menu.getAllMenus().stream().map(Menu::getMenuName).collect(Collectors.toList());
     }
 
-    private void configureInventory(String fileName, FileConfiguration config, Inventory chestInventory) {
+    @Override
+    public void configureInventory(String fileName, FileConfiguration config, Inventory chestInventory) {
         config.set("menu_title", fileName);
         config.set("register_command", true);
         config.set("open_command", List.of(fileName));
         config.set("size", chestInventory.getSize());
     }
 
-    private void storeItemInConfig(ItemStack item, FileConfiguration config, int count, int index) {
+    @Override
+    public void storeItemInConfig(FileConfiguration config, ConfigItem configItem, int count) {
         String path = String.format("items.%s.", count);
-        ConfigItem configItem = new ConfigItem(item, index);
-        for (DeluxeMenusHook.AttributeType attributeType : DeluxeMenusHook.AttributeType.values()) {
+        for (AttributeType attributeType : AttributeType.values()) {
             config.set(path + attributeType.name().toLowerCase(Locale.ROOT), attributeType.attribute.apply(configItem));
         }
     }

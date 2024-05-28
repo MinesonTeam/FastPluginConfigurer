@@ -33,7 +33,7 @@ public class ConfigItem {
     private DyeColor dyeColor;
     private EntityType entityType;
     private Set<ItemFlag> itemFlags = Collections.emptySet();
-    private List<String> lore = Collections.emptyList();
+    private List<String> lore;
     private List<Pattern> bannerPatterns = Collections.emptyList();
     private List<PotionEffect> potionEffects = Collections.emptyList();
     private Map<Enchantment, Integer> enchantments = Collections.emptyMap();

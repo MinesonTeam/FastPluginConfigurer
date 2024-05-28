@@ -99,6 +99,7 @@ public class FPCCommand extends AbstractCommand {
         BasicFastInventory fastInventory = createFastInventory(args[1]);
 
         setupConfigInventories(config.getKeys(false).iterator(), fastInventory, config, args[1]);
+
         humanEntity.openInventory(fastInventory.getInventory());
     }
 

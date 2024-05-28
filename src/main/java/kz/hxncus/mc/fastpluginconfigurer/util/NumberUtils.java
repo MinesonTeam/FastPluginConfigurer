@@ -20,7 +20,7 @@ public class NumberUtils {
         boolean allowSigns = false;
         boolean foundDigit = false;
         // deal with any possible sign up front
-        final int start = chars[0] == '-' || chars[0] == '+' ? 1 : 0;
+        int start = chars[0] == '-' || chars[0] == '+' ? 1 : 0;
         // leading 0, skip if is a decimal number
         if (charsLength > start + 1 && chars[start] == '0' && !StringUtils.contains(string, '.')) {
             // leading 0x/0X
@@ -51,22 +51,19 @@ public class NumberUtils {
         }
         // don't want to loop to the last char, check it afterwards
         charsLength--;
-        // for type qualifiers
-        int i = start;
         // loop to the next to last char or to the last char if we need another digit to
         // make a valid number (e.g. chars[0..5] = "1234E")
-        while (i < charsLength || i < charsLength + 1 && allowSigns && !foundDigit) {
-            if (chars[i] >= '0' && chars[i] <= '9') {
+        while (start < charsLength || start < charsLength + 1 && allowSigns && !foundDigit) {
+            if (chars[start] >= '0' && chars[start] <= '9') {
                 foundDigit = true;
                 allowSigns = false;
-
-            } else if (chars[i] == '.') {
+            } else if (chars[start] == '.') {
                 if (hasDecPoint || hasExp) {
                     // two decimal points or dec in exponent
                     return false;
                 }
                 hasDecPoint = true;
-            } else if (chars[i] == 'e' || chars[i] == 'E') {
+            } else if (chars[start] == 'e' || chars[start] == 'E') {
                 // we've already taken care of hex.
                 if (hasExp) {
                     // two E's
@@ -77,7 +74,7 @@ public class NumberUtils {
                 }
                 hasExp = true;
                 allowSigns = true;
-            } else if (chars[i] == '+' || chars[i] == '-') {
+            } else if (chars[start] == '+' || chars[start] == '-') {
                 if (!allowSigns) {
                     return false;
                 }
@@ -87,18 +84,18 @@ public class NumberUtils {
             } else {
                 return false;
             }
-            i++;
+            start++;
         }
-        if (i < chars.length) {
-            if (chars[i] >= '0' && chars[i] <= '9') {
+        if (start < chars.length) {
+            if (chars[start] >= '0' && chars[start] <= '9') {
                 // no type qualifier, OK
                 return true;
             }
-            if (chars[i] == 'e' || chars[i] == 'E') {
+            if (chars[start] == 'e' || chars[start] == 'E') {
                 // can't have an E at the last byte
                 return false;
             }
-            if (chars[i] == '.') {
+            if (chars[start] == '.') {
                 if (hasDecPoint || hasExp) {
                     // two decimal points or dec in exponent
                     return false;
@@ -107,14 +104,14 @@ public class NumberUtils {
                 return foundDigit;
             }
             if (!allowSigns
-                    && (chars[i] == 'd'
-                    || chars[i] == 'D'
-                    || chars[i] == 'f'
-                    || chars[i] == 'F')) {
+                    && (chars[start] == 'd'
+                    || chars[start] == 'D'
+                    || chars[start] == 'f'
+                    || chars[start] == 'F')) {
                 return foundDigit;
             }
-            if (chars[i] == 'l'
-                    || chars[i] == 'L') {
+            if (chars[start] == 'l'
+                    || chars[start] == 'L') {
                 // not allowing L with an exponent or decimal point
                 return foundDigit && !hasExp && !hasDecPoint;
             }
@@ -231,16 +228,13 @@ public class NumberUtils {
     public Number createNumber(final String str) {
         if (str == null) {
             return null;
-        }
-        if (StringUtils.isBlank(str)) {
+        } else if (StringUtils.isBlank(str)) {
             throw new NumberFormatException("A blank string is not a valid number");
         }
         // Need to deal with all possible hex prefixes here
-        final String[] hexPrefixes = {"0x", "0X", "#"};
-        final int length = str.length();
         final int offset = str.charAt(0) == '+' || str.charAt(0) == '-' ? 1 : 0;
         int pfxLen = 0;
-        for (final String pfx : hexPrefixes) {
+        for (final String pfx : new String[]{"0x", "0X", "#"}) {
             if (str.startsWith(pfx, offset)) {
                 pfxLen += pfx.length() + offset;
                 break;
@@ -248,87 +242,83 @@ public class NumberUtils {
         }
         if (pfxLen > 0) { // we have a hex number
             char firstSigDigit = 0; // strip leading zeroes
-            for (int i = pfxLen; i < length; i++) {
+            for (int i = pfxLen; i < str.length(); i++) {
                 firstSigDigit = str.charAt(i);
                 if (firstSigDigit != '0') {
                     break;
                 }
                 pfxLen++;
             }
-            final int hexDigits = length - pfxLen;
+            final int hexDigits = str.length() - pfxLen;
             if (hexDigits > 16 || hexDigits == 16 && firstSigDigit > '7') { // too many for Long
                 return createBigInteger(str);
-            }
-            if (hexDigits > 8 || hexDigits == 8 && firstSigDigit > '7') { // too many for an int
+            } else if (hexDigits > 8 || hexDigits == 8 && firstSigDigit > '7') { // too many for an int
                 return createLong(str);
             }
             return createInteger(str);
         }
-        final char lastChar = str.charAt(length - 1);
-        final String mantissa;
-        final String dec;
-        final String exp;
         final int decPos = str.indexOf('.');
         final int expPos = str.indexOf('e') + str.indexOf('E') + 1; // assumes both not present
         // if both e and E are present, this is caught by the checks on expPos (which prevent IOOBE)
         // and the parsing which will detect if e or E appear in a number due to using the wrong offset
-
         // Detect if the return type has been requested
+        final char lastChar = str.charAt(str.length() - 1);
         final boolean requestType = !Character.isDigit(lastChar) && lastChar != '.';
         // there is a decimal point
+        final String dec;
+        final String mantissa;
+        int endIndex = requestType ? str.length() - 1 : str.length();
         if (decPos > -1) {
             // there is an exponent
             if (expPos > -1) {
                 // prevents double exponent causing IOOBE
-                if (expPos <= decPos || expPos > length) {
+                if (expPos <= decPos || expPos > str.length()) {
                     throw new NumberFormatException(str + IS_NOT_A_VALID_NUMBER);
                 }
                 dec = str.substring(decPos + 1, expPos);
             } else {
                 // No exponent, but there may be a type character to remove
-                dec = str.substring(decPos + 1, requestType ? length - 1 : length);
+                dec = str.substring(decPos + 1, endIndex);
             }
             mantissa = getMantissa(str, decPos);
         } else {
             if (expPos > -1) {
                 // prevents double exponent causing IOOBE
-                if (expPos > length) {
+                if (expPos > str.length()) {
                     throw new NumberFormatException(str + IS_NOT_A_VALID_NUMBER);
                 }
                 mantissa = getMantissa(str, expPos);
             } else {
                 // No decimal, no exponent, but there may be a type character to remove
-                mantissa = getMantissa(str, requestType ? length - 1 : length);
+                mantissa = getMantissa(str, endIndex);
             }
             dec = null;
         }
+        final String exp;
         if (requestType) {
-            if (expPos > -1 && expPos < length - 1) {
-                exp = str.substring(expPos + 1, length - 1);
+            if (expPos > -1 && expPos < str.length() - 1) {
+                exp = str.substring(expPos + 1, str.length() - 1);
             } else {
                 exp = null;
             }
             //Requesting a specific type.
-            final String numeric = str.substring(0, length - 1);
+            final String numeric = str.substring(0, str.length() - 1);
             switch (lastChar) {
-                case 'l' :
-                case 'L' :
-                    if (dec == null
-                            && exp == null
-                            && (!numeric.isEmpty() && numeric.charAt(0) == '-' && isDigits(numeric.substring(1)) || isDigits(numeric))) {
+                case 'l':
+                case 'L':
+                    if (dec == null && exp == null && (!numeric.isEmpty() && numeric.charAt(0) == '-' && isDigits(numeric.substring(1)) || isDigits(numeric))) {
                         try {
                             return createLong(numeric);
                         } catch (final NumberFormatException ignored) {
-                            // Too big for a long
+                            return createBigInteger(numeric);
                         }
-                        return createBigInteger(numeric);
 
                     }
                     throw new NumberFormatException(str + IS_NOT_A_VALID_NUMBER);
-                case 'f' :
-                case 'F' :
+                case 'f':
+                case 'F':
                     try {
-                        final Float  createdFloat = createFloat(str);
+                        final Float createdFloat = createFloat(str);
                         if (!(createdFloat.isInfinite() || createdFloat == 0.0F && !isZero(mantissa, dec))) {
                             //If it's too big for a float or the float value = 0 and the string
                             //has non-zeros in it, then float does not have the precision we want
@@ -339,8 +329,8 @@ public class NumberUtils {
                         // ignore the bad number
                     }
                     //$FALL-THROUGH$
-                case 'd' :
-                case 'D' :
+                case 'd':
+                case 'D':
                     try {
                         final Double createdDouble = createDouble(str);
                         if (!(createdDouble.isInfinite() || createdDouble == 0.0D && !isZero(mantissa, dec))) {
@@ -362,36 +352,31 @@ public class NumberUtils {
         }
         //User doesn't have a preference on the return type, so let's start
         //small and go from there...
-        if (expPos > -1 && expPos < length - 1) {
+        if (expPos > -1 && expPos < str.length() - 1) {
             exp = str.substring(expPos + 1);
         } else {
             exp = null;
         }
-        if (dec == null && exp == null) { // no decimal point and no exponent
-            //Must be an Integer, Long, Biginteger
+        // no decimal point and no exponent
+        if (dec == null && exp == null) {
+            // Must be an Integer, Long, Biginteger
             try {
                 return createInteger(str);
             } catch (final NumberFormatException ignored) {
-                // ignore the bad number
+                try {
+                    return createLong(str);
+                } catch (final NumberFormatException ignored2) {
+                    return createBigInteger(str);
+                }
             }
-            try {
-                return createLong(str);
-            } catch (final NumberFormatException ignored) {
-                // ignore the bad number
-            }
-            return createBigInteger(str);
         }
-
-        //Must be a Float, Double, BigDecimal
+        // Must be a Float, Double, BigDecimal
         try {
             final Float createdFloat = createFloat(str);
             final Double createdDouble = createDouble(str);
-            if (!createdFloat.isInfinite()
-                    && !(createdFloat == 0.0F && !isZero(mantissa, dec))
-                    && createdFloat.toString().equals(createdDouble.toString())) {
+            if (!createdFloat.isInfinite() && !(createdFloat == 0.0F && !isZero(mantissa, dec)) && createdFloat.toString().equals(createdDouble.toString())) {
                 return createdFloat;
-            }
-            if (!createdDouble.isInfinite() && !(createdDouble == 0.0D && !isZero(mantissa, dec))) {
+            } else if (!createdDouble.isInfinite() && !(createdDouble == 0.0D && !isZero(mantissa, dec))) {
                 final BigDecimal bigDecimal = createBigDecimal(str);
                 if (bigDecimal.compareTo(BigDecimal.valueOf(createdDouble)) == 0) {
                     return createdDouble;

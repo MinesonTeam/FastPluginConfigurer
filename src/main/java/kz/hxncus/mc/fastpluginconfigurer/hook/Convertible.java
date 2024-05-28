@@ -1,9 +1,12 @@
 package kz.hxncus.mc.fastpluginconfigurer.hook;
 
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
+import kz.hxncus.mc.fastpluginconfigurer.config.ConfigItem;
 import lombok.Getter;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
@@ -11,6 +14,8 @@ import java.util.List;
 public interface Convertible {
     void convertFileToInventory(Player player, String fileName);
     void convertInventoryToFile(Player player, String fileName);
+    void configureInventory(String fileName, FileConfiguration config, Inventory chestInventory);
+    void storeItemInConfig(FileConfiguration config, ConfigItem configItem, int count);
     List<String> getAllFileNames();
 
     @Getter
