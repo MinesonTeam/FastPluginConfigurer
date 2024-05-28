@@ -10,7 +10,7 @@ body:
     attributes:
       label: FastPluginConfigurer version
       description: What version of the FastPluginConfigurer are you using?
-      placeholder: "8.5.0"
+      placeholder: "1.0.5.0..."
     validations:
       required: true
   - type: dropdown
@@ -42,8 +42,8 @@ body:
       label: What I did
       description: What did you do to encounter this bug? Please be as detailed as possible!
       placeholder: |
-        - I converted file "inventory.yml" into chest.
-        - I ran the command `/fpc config Essentials`
+        - I converted file "inventory.yml" into chest...
+        - I ran the command `/fpc config Essentials`...
     validations:
       required: true
   - type: textarea
