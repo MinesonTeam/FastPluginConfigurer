@@ -4,7 +4,8 @@ import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
 import kz.hxncus.mc.fastpluginconfigurer.config.ConfigMaterial;
 import kz.hxncus.mc.fastpluginconfigurer.config.ConfigSession;
 import kz.hxncus.mc.fastpluginconfigurer.hook.Convertible;
-import kz.hxncus.mc.fastpluginconfigurer.inventory.BasicFastInventory;
+import kz.hxncus.mc.fastpluginconfigurer.inventory.AbstractInventory;
+import kz.hxncus.mc.fastpluginconfigurer.inventory.EmptyInventory;
 import kz.hxncus.mc.fastpluginconfigurer.util.*;
 import kz.hxncus.mc.fastpluginconfigurer.util.builder.ItemBuilder;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -46,7 +47,6 @@ public class FPCCommand extends AbstractCommand {
             plugin.reloadConfig();
             plugin.registerStaff();
             Messages.updateAllMessages();
-            Convertible.Converters.updateAllConverters();
             Messages.CONFIG_SUCCESSFULLY_RELOADED.sendMessage(sender);
         } else {
             sendHelpMessage(sender, label);
@@ -96,20 +96,20 @@ public class FPCCommand extends AbstractCommand {
 
         FileConfiguration config = YamlConfiguration.loadConfiguration(file);
         FileUtil.reload(config, file);
-        BasicFastInventory fastInventory = createFastInventory(args[1]);
+        AbstractInventory fastInventory = createFastInventory(args[1]);
 
         setupConfigInventories(config.getKeys(false).iterator(), fastInventory, config, args[1]);
 
         humanEntity.openInventory(fastInventory.getInventory());
     }
 
-    private void setupConfigInventories(Iterator<String> iterator, BasicFastInventory fastInventory, ConfigurationSection section, String lastPluginName) {
+    private void setupConfigInventories(Iterator<String> iterator, AbstractInventory fastInventory, ConfigurationSection section, String lastPluginName) {
         while (iterator.hasNext()) {
             if (fastInventory.getInventory().firstEmpty() > 44) {
-                BasicFastInventory basicFastInventory = createFastInventory(lastPluginName);
-                fastInventory.setItem(53, Constants.ARROW_ITEM.setDisplayName(Messages.NEXT_PAGE.getMessage()).build(), event -> event.getWhoClicked().openInventory(basicFastInventory.getInventory()));
-                basicFastInventory.setItem(45, Constants.ARROW_ITEM.setDisplayName(Messages.PREVIOUS_PAGE.getMessage()).build(), event -> event.getWhoClicked().openInventory(fastInventory.getInventory()));
-                setupConfigInventories(iterator, basicFastInventory, section, lastPluginName);
+                AbstractInventory abstractInventory = createFastInventory(lastPluginName);
+                fastInventory.setItem(53, Constants.ARROW_ITEM.setDisplayName(Messages.NEXT_PAGE.getMessage()).build(), event -> event.getWhoClicked().openInventory(abstractInventory.getInventory()));
+                abstractInventory.setItem(45, Constants.ARROW_ITEM.setDisplayName(Messages.PREVIOUS_PAGE.getMessage()).build(), event -> event.getWhoClicked().openInventory(fastInventory.getInventory()));
+                setupConfigInventories(iterator, abstractInventory, section, lastPluginName);
                 return;
             }
             setupKey(lastPluginName, fastInventory, section, iterator.next());
@@ -119,13 +119,13 @@ public class FPCCommand extends AbstractCommand {
         }
     }
 
-    private BasicFastInventory createFastInventory(String title) {
-        BasicFastInventory fastInventory = new BasicFastInventory(plugin, 54, title);
+    private AbstractInventory createFastInventory(String title) {
+        AbstractInventory fastInventory = new EmptyInventory(54, title);
         fastInventory.addClickHandler(event -> event.setCancelled(true));
         return fastInventory;
     }
     
-    private void addNewKeyItem(BasicFastInventory inventory, String currentPath) {
+    private void addNewKeyItem(AbstractInventory inventory, String currentPath) {
         inventory.addItem(Constants.NETHER_STAR.setDisplayName(Messages.CLICK_TO_ADD_NEW_KEY.getMessage()).build(), event -> {
             HumanEntity humanEntity = event.getWhoClicked();
             humanEntity.closeInventory();
@@ -140,12 +140,12 @@ public class FPCCommand extends AbstractCommand {
         });
     }
 
-    private void setupKey(String lastPluginName, BasicFastInventory inventory, ConfigurationSection section, String path) {
+    private void setupKey(String lastPluginName, AbstractInventory inventory, ConfigurationSection section, String path) {
         ConfigurationSection sections = section.getConfigurationSection(path);
         String currentPath = section.getCurrentPath();
         String fullPath = StringUtils.isEmpty(currentPath) ? path : String.format("%s.%s", currentPath, path);
         if (sections != null) {
-            BasicFastInventory fastInventory = createFastInventory(lastPluginName);
+            AbstractInventory fastInventory = createFastInventory(lastPluginName);
             inventory.addItem(new ItemBuilder(VersionUtil.SIGN).setDisplayName(Messages.SECTION.getFormattedMessage(path))
                     .addLore("", Messages.CLICK_TO_OPEN_SECTION.getMessage(), Messages.SHIFT_CLICK_TO_EDIT_SECTION.getMessage())
                     .build(), event -> onSectionClick(event, fastInventory, fullPath));
@@ -166,7 +166,7 @@ public class FPCCommand extends AbstractCommand {
         }
     }
 
-    private void addKeyItemToInventory(BasicFastInventory inventory, Object value, String fullPath) {
+    private void addKeyItemToInventory(AbstractInventory inventory, Object value, String fullPath) {
         inventory.addItem(new ItemBuilder(getMaterialFromValue(value))
             .setDisplayName(Messages.KEY.getFormattedMessage(fullPath))
             .addLore(Messages.CURRENT_VALUE.getMessage(), Messages.VALUE.getFormattedMessage(StringUtils.isEmpty(value.toString()) ? Messages.EMPTY_VALUE : value))
@@ -175,7 +175,7 @@ public class FPCCommand extends AbstractCommand {
             .build(), event -> onItemClick(event, fullPath, value.toString()));
     }
 
-    private void onSectionClick(InventoryClickEvent event, BasicFastInventory fastInventory, String fullPath) {
+    private void onSectionClick(InventoryClickEvent event, AbstractInventory fastInventory, String fullPath) {
         HumanEntity humanEntity = event.getWhoClicked();
         if (!event.getClick().isShiftClick()) {
             humanEntity.openInventory(fastInventory.getInventory());
@@ -186,10 +186,6 @@ public class FPCCommand extends AbstractCommand {
 
     private void handlePlayerPathSetting(String fullPath, HumanEntity humanEntity) {
         humanEntity.closeInventory();
-        if (fullPath == null) {
-            Messages.INVALID_PATH.sendMessage(humanEntity);
-            return;
-        }
         ConfigSession player = FastPluginConfigurer.getConfigSession(humanEntity.getUniqueId());
         player.setChat(ConfigSession.Chat.SETTING_KEY_VALUE);
         player.setKeyPath(fullPath);

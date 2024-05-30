@@ -35,25 +35,27 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerChatEvent(AsyncPlayerChatEvent event) {
-        Player player = event.getPlayer();
-        ConfigSession configSession = FastPluginConfigurer.getConfigSession(player.getUniqueId());
-        if (configSession.getChat() == ConfigSession.Chat.NOTHING) {
+        ConfigSession configSession = FastPluginConfigurer.getConfigSession(event.getPlayer().getUniqueId());
+        ConfigSession.Chat chat = configSession.getChat();
+        if (chat == ConfigSession.Chat.NOTHING) {
             return;
         }
+        event.setCancelled(true);
         configSession.setChat(ConfigSession.Chat.NOTHING);
-        openLastClosedInventory(player, configSession, configSession.getFile());
+        openLastClosedInventory(event.getPlayer(), configSession, configSession.getFile());
         String message = event.getMessage();
         if ("cancel".equalsIgnoreCase(message)) {
             return;
         }
         YamlConfiguration config = YamlConfiguration.loadConfiguration(configSession.getFile());
-        if (configSession.getChat() == ConfigSession.Chat.ADDING_NEW_KEY) {
+        if (chat == ConfigSession.Chat.ADDING_NEW_KEY) {
+            plugin.getLogger().info("TEST!@#");
             config.set(configSession.getKeyPath().isEmpty() ? message : configSession.getKeyPath() + "." + message, "");
-        } else if (configSession.getChat() == ConfigSession.Chat.SETTING_KEY_VALUE) {
+        } else if (chat == ConfigSession.Chat.SETTING_KEY_VALUE) {
+            plugin.getLogger().info("TEST");
             config.set(configSession.getKeyPath(), convert(message));
         }
-        FileUtil.reload(config, configSession.getFile());
-        event.setCancelled(true);
+        FileUtil.save(config, configSession.getFile());
     }
 
     private Object convert(String message) {

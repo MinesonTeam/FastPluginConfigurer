@@ -20,15 +20,14 @@ public class ConfigSession {
     public void cancelTask() {
         chatTask.cancel();
     }
-
+    
     public void setChat(Chat chat) {
+        this.chat = chat;
         if (chat == Chat.NOTHING) {
             cancelTask();
         } else {
-            setChatTask(Bukkit.getScheduler().runTaskLater(FastPluginConfigurer.getInstance(),
-                                           () -> this.chat = Chat.NOTHING, 1200L));
+            setChatTask(Bukkit.getScheduler().runTaskLater(FastPluginConfigurer.getInstance(), () -> this.chat = Chat.NOTHING, 1200L));
         }
-        this.chat = chat;
     }
 
     public enum Chat {

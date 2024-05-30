@@ -28,7 +28,6 @@ public class ChestCommandsHook extends AbstractHook {
     @Override
     public void convertFileToInventory(Player player, String fileName) {
         Block targetBlock = VersionUtil.getTargetBlock(player, 5);
-        plugin.getLogger().info("TargetBlock: " + targetBlock);
         BlockState state = targetBlock == null ? null : targetBlock.getState();
         if (!(state instanceof Chest)) {
             Messages.MUST_LOOKING_AT_DOUBLE_CHEST.sendMessage(player);

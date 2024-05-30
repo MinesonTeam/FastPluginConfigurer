@@ -15,7 +15,16 @@ public class FileUtil {
             config.load(file);
             return true;
         } catch (IOException | InvalidConfigurationException e) {
-            throw new RuntimeException(e);
+            return false;
+        }
+    }
+
+    public boolean save(FileConfiguration config, File file) {
+        try {
+            config.save(file);
+            return true;
+        } catch (IOException e) {
+            return false;
         }
     }
 }

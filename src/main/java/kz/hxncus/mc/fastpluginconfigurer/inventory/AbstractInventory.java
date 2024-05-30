@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.*;
 import org.bukkit.inventory.Inventory;
@@ -20,8 +21,8 @@ import java.util.function.Predicate;
 
 @Getter
 @EqualsAndHashCode
-public class BasicFastInventory implements FastInventory {
-    private final FastPluginConfigurer plugin;
+public abstract class AbstractInventory implements FastInventory {
+    private final FastPluginConfigurer plugin = FastPluginConfigurer.getInstance();
     private final Inventory inventory;
     private final Map<Integer, Consumer<InventoryClickEvent>> itemClickHandlers = new ConcurrentHashMap<>();
     private final List<Consumer<InventoryDragEvent>> dragHandlers = new ArrayList<>();
@@ -32,30 +33,32 @@ public class BasicFastInventory implements FastInventory {
     @Setter
     private boolean marking = true;
 
-    public BasicFastInventory(FastPluginConfigurer plugin, InventoryType type) {
-        this(plugin, Bukkit.createInventory(null, type));
+    protected AbstractInventory(InventoryType type) {
+        this(Bukkit.createInventory(null, type));
     }
 
-    public BasicFastInventory(FastPluginConfigurer plugin, InventoryType type, String title) {
-        this(plugin, Bukkit.createInventory(null, type, title));
+    protected AbstractInventory(InventoryType type, String title) {
+        this(Bukkit.createInventory(null, type, title));
     }
 
-    public BasicFastInventory(FastPluginConfigurer plugin, int size) {
-        this(plugin, Bukkit.createInventory(null, size));
+    protected AbstractInventory(int size) {
+        this(Bukkit.createInventory(null, size));
     }
 
-    public BasicFastInventory(FastPluginConfigurer plugin, int size, String title) {
-        this(plugin, Bukkit.createInventory(null, size, title));
+    protected AbstractInventory(int size, String title) {
+        this(Bukkit.createInventory(null, size, title));
     }
 
-    public BasicFastInventory(FastPluginConfigurer plugin, @NonNull Inventory inventory) {
-        this.plugin = plugin;
+    protected AbstractInventory(@NonNull Inventory inventory) {
         this.inventory = inventory;
         plugin.getInventoryManager().register(inventory, this);
         Bukkit.getScheduler().runTaskLater(plugin, this::onInitialize, 1L);
     }
 
-    @NonNull
+    public void openInventory(HumanEntity entity) {
+        entity.openInventory(inventory);
+    }
+
     public int addItem(ItemStack item) {
         int slot = this.inventory.firstEmpty();
         if (slot != -1) {
@@ -64,7 +67,6 @@ public class BasicFastInventory implements FastInventory {
         return slot;
     }
 
-    @NonNull
     public int addItem(ItemStack item, Consumer<InventoryClickEvent> handler) {
         setItem(inventory.firstEmpty(), handler);
         return addItem(item);
@@ -89,12 +91,10 @@ public class BasicFastInventory implements FastInventory {
         return items;
     }
 
-    @NonNull
     public void setItem(int slot, ItemStack item) {
         this.inventory.setItem(slot, marking ? plugin.getInventoryManager().getItemMarker().markItem(item) : item);
     }
 
-    @NonNull
     public void setItem(int slot, Consumer<InventoryClickEvent> handler) {
         if (handler != null) {
             this.itemClickHandlers.put(slot, handler);
@@ -103,7 +103,6 @@ public class BasicFastInventory implements FastInventory {
         }
     }
 
-    @NonNull
     public void setItem(int slot, ItemStack item, Consumer<InventoryClickEvent> handler) {
         setItem(slot, handler);
         setItem(slot, item);
@@ -188,48 +187,25 @@ public class BasicFastInventory implements FastInventory {
         return this;
     }
 
-    public void onInitialize() {
-        // Basic inventory initialization
-    }
-    public void onDrag(InventoryDragEvent event) {
-        // Basic inventory drag
-    }
-    public void onClick(InventoryClickEvent event) {
-        // Basic inventory click
-    }
-    public void onClose(InventoryCloseEvent event) {
-        // Basic inventory close
-    }
-    public void onOpen(InventoryOpenEvent event) {
-        // Basic inventory open
-    }
     public void handleDrag(InventoryDragEvent event) {
         onDrag(event);
-        for (Consumer<InventoryDragEvent> dragHandler : dragHandlers) {
-            dragHandler.accept(event);
-        }
+        dragHandlers.forEach(handler -> handler.accept(event));
     }
 
     public void handleOpen(InventoryOpenEvent event) {
         onOpen(event);
-        for (Consumer<InventoryOpenEvent> openHandler : openHandlers) {
-            openHandler.accept(event);
-        }
+        openHandlers.forEach(handler -> handler.accept(event));
     }
 
     public boolean handleClose(InventoryCloseEvent event) {
         onClose(event);
-        for (Consumer<InventoryCloseEvent> closeHandler : closeHandlers) {
-            closeHandler.accept(event);
-        }
+        closeHandlers.forEach(handler -> handler.accept(event));
         return this.closeFilter != null && this.closeFilter.test((Player) event.getPlayer());
     }
 
     public void handleClick(InventoryClickEvent event) {
         onClick(event);
-        for (Consumer<InventoryClickEvent> clickHandler : clickHandlers) {
-            clickHandler.accept(event);
-        }
+        clickHandlers.forEach(handler -> handler.accept(event));
         Consumer<InventoryClickEvent> clickConsumer = itemClickHandlers.get(event.getRawSlot());
         if (clickConsumer != null) {
             clickConsumer.accept(event);

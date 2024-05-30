@@ -53,18 +53,18 @@ public interface Convertible {
 
         public static Converters valueOfIgnoreCase(String name) {
             for (Convertible.Converters converters : values()) {
-                if (name.equalsIgnoreCase(converters.getName())) {
+                if (converters.getName().equalsIgnoreCase(name)) {
                     return converters;
                 }
             }
             return null;
         }
 
-        public static void updateAllConverters() {
-            for (Converters converter : values()) {
-                converter.setConverter();
-            }
-
-        }
+//        public static void updateAllConverters() {
+//            for (Converters converter : values()) {
+//                converter.setConverter();
+//            }
+//
+//        }
     }
 }
