@@ -12,7 +12,6 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.*;
-import org.bukkit.material.MaterialData;
 import org.bukkit.potion.PotionEffect;
 
 import java.util.Collections;
@@ -42,10 +41,7 @@ public class ConfigItem {
         this.material = item.getType();
         this.amount = item.getAmount();
         this.index = index;
-        MaterialData itemData = item.getData();
-        if (itemData != null) {
-            this.data = itemData.getData();
-        }
+        this.data = item.getData() == null ? null : item.getData().getData();
         ItemMeta itemMeta = item.getItemMeta();
         if (itemMeta == null) {
             return;

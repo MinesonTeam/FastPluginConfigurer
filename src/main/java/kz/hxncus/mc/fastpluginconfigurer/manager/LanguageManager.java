@@ -15,13 +15,14 @@ import java.io.File;
 public class LanguageManager {
     private final FastPluginConfigurer plugin;
     private final FileConfiguration langConfig;
+    private String lang;
 
     public LanguageManager(FastPluginConfigurer plugin) {
         this.plugin = plugin;
-        String lang = plugin.getConfig().getString("lang");
+        lang = plugin.getConfig().getString("lang");
         if (StringUtils.isEmpty(lang) || !Constants.SUPPORTED_LANGUAGES.contains("translations\\" + lang + Constants.YML_EXPANSION)) {
+            plugin.getLogger().warning(() -> String.format("Unknown language '%s'. Selected 'en' as the default language.", lang));
             lang = "en";
-            plugin.getLogger().warning(() -> String.format("Unknown language '%s'. Selected 'en' as the default language.", plugin.getConfig().getString("lang")));
         }
         File file = new File(plugin.getDirectoryManager().getTranslationsDir() + File.separator + lang + Constants.YML_EXPANSION);
         this.langConfig = YamlConfiguration.loadConfiguration(file);

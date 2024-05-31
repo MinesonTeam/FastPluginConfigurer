@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'kz.hxncus.mc'
-version = '1.0.7.0'
+version = '1.0.8'
 
 repositories {
     mavenCentral()
@@ -26,6 +26,7 @@ dependencies {
     compileOnly(files('E:\\dev-server-1.16.5\\plugins\\zmenu-1.0.3.1.jar'))
     compileOnly(files('E:\\dev-server-1.16.5\\plugins\\bettergui-9.6-shaded.jar'))
 
+    implementation 'org.bstats:bstats-bukkit:3.0.2'
 //    implementation "com.deepl.api:deepl-java:1.5.0"
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'

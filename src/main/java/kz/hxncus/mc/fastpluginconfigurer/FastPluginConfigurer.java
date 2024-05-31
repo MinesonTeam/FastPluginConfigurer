@@ -9,6 +9,8 @@ import kz.hxncus.mc.fastpluginconfigurer.manager.FilesManager;
 import kz.hxncus.mc.fastpluginconfigurer.manager.InventoryManager;
 import kz.hxncus.mc.fastpluginconfigurer.manager.LanguageManager;
 import lombok.Getter;
+import org.bstats.bukkit.Metrics;
+import org.bstats.charts.SimplePie;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -45,9 +47,10 @@ public final class FastPluginConfigurer extends JavaPlugin {
     }
 
     public void registerStaff() {
-        registerManagers(instance);
-        registerEvents(Bukkit.getPluginManager(), instance);
-        registerCommands(instance);
+        registerManagers(this);
+        registerEvents(this, Bukkit.getPluginManager());
+        registerCommands(this);
+        registerMetrics(this);
     }
 
     @Override
@@ -66,9 +69,14 @@ public final class FastPluginConfigurer extends JavaPlugin {
         new FPCCommand(plugin);
     }
 
-    private void registerEvents(PluginManager pluginManager, FastPluginConfigurer plugin) {
+    private void registerEvents(FastPluginConfigurer plugin, PluginManager pluginManager) {
         pluginManager.registerEvents(inventoryManager, plugin);
         pluginManager.registerEvents(new DupeFixerListener(plugin, inventoryManager), plugin);
         pluginManager.registerEvents(new PlayerListener(plugin), plugin);
+    }
+
+    private void registerMetrics(FastPluginConfigurer plugin) {
+        Metrics metrics = new Metrics(plugin, 22084);
+        metrics.addCustomChart(new SimplePie("used_language", () -> languageManager.getLang()));
     }
 }

@@ -23,7 +23,7 @@ public class Constants {
 
     public final Set<String> EMBEDDED_LANGUAGES = new HashSet<>(List.of("translations\\ar.yml", "translations\\bn.yml", "translations\\da.yml", "translations\\de.yml",
             "translations\\en.yml", "translations\\eo.yml", "translations\\es.yml", "translations\\fr.yml", "translations\\hi.yml", "translations\\id.yml",
-            "translations\\id.yml", "translations\\jp.yml", "translations\\nl.yml", "translations\\no.yml", "translations\\pt.yml", "translations\\ru.yml",
+            "translations\\id.yml", "translations\\ja.yml", "translations\\nl.yml", "translations\\no.yml", "translations\\pt.yml", "translations\\ru.yml",
             "translations\\sv.yml", "translations\\ua.yml", "translations\\zh.yml"));
     public final Set<String> SUPPORTED_LANGUAGES = new HashSet<>();
     public final Set<String> FILES = new HashSet<>(List.of("config.yml"));
