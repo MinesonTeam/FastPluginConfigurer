@@ -43,17 +43,14 @@ public class PlayerListener implements Listener {
         event.setCancelled(true);
         configSession.setChat(ConfigSession.Chat.NOTHING);
         openLastClosedInventory(event.getPlayer(), configSession, configSession.getFile());
-        String message = event.getMessage();
-        if ("cancel".equalsIgnoreCase(message)) {
+        if ("cancel".equalsIgnoreCase(event.getMessage())) {
             return;
         }
         YamlConfiguration config = YamlConfiguration.loadConfiguration(configSession.getFile());
         if (chat == ConfigSession.Chat.ADDING_NEW_KEY) {
-            plugin.getLogger().info("TEST!@#");
-            config.set(configSession.getKeyPath().isEmpty() ? message : configSession.getKeyPath() + "." + message, "");
+            config.set(configSession.getKeyPath().isEmpty() ? event.getMessage() : configSession.getKeyPath() + "." + event.getMessage(), "");
         } else if (chat == ConfigSession.Chat.SETTING_KEY_VALUE) {
-            plugin.getLogger().info("TEST");
-            config.set(configSession.getKeyPath(), convert(message));
+            config.set(configSession.getKeyPath(), convert(event.getMessage()));
         }
         FileUtil.save(config, configSession.getFile());
     }

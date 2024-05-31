@@ -41,6 +41,9 @@ public class FilesManager {
             FileConfiguration config = YamlConfiguration.loadConfiguration(file);
 
             try (InputStream resource = plugin.getResource(filePath.replace('\\', '/'))) {
+                if (resource == null) {
+                    continue;
+                }
                 FileConfiguration embeddedConfig = YamlConfiguration.loadConfiguration(new InputStreamReader(resource));
                 config.options()
                       .copyDefaults(true);

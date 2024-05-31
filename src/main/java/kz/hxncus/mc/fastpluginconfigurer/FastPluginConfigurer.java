@@ -8,9 +8,8 @@ import kz.hxncus.mc.fastpluginconfigurer.manager.DirectoryManager;
 import kz.hxncus.mc.fastpluginconfigurer.manager.FilesManager;
 import kz.hxncus.mc.fastpluginconfigurer.manager.InventoryManager;
 import kz.hxncus.mc.fastpluginconfigurer.manager.LanguageManager;
+import kz.hxncus.mc.fastpluginconfigurer.util.Metrics;
 import lombok.Getter;
-import org.bstats.bukkit.Metrics;
-import org.bstats.charts.SimplePie;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -77,6 +76,6 @@ public final class FastPluginConfigurer extends JavaPlugin {
 
     private void registerMetrics(FastPluginConfigurer plugin) {
         Metrics metrics = new Metrics(plugin, 22084);
-        metrics.addCustomChart(new SimplePie("used_language", () -> languageManager.getLang()));
+        metrics.addCustomChart(new Metrics.SimplePie("used_language", () -> languageManager.getLang()));
     }
 }
