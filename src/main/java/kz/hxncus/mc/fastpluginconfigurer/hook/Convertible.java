@@ -7,6 +7,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.plugin.Plugin;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
@@ -37,7 +38,8 @@ public interface Convertible {
         }
 
         public void setConverter() {
-            if (Bukkit.getPluginManager().getPlugin(name) == null) {
+            Plugin plugin = Bukkit.getPluginManager().getPlugin(name);
+            if (plugin == null || !plugin.isEnabled()) {
                 return;
             }
             try {

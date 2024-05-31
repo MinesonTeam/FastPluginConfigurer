@@ -59,14 +59,14 @@ public class FPCCommand extends AbstractCommand {
             return;
         }
         Convertible.Converters converter = Convertible.Converters.valueOfIgnoreCase(args[1]);
-        if (converter == null) {
+        if (converter == null || converter.getConverter() == null) {
             Messages.CONVERTER_TYPE_DOES_NOT_EXIST.sendMessage(sender);
-        } else {
-            if (args[0].equalsIgnoreCase(Constants.INVENTORY_TO_FILE)) {
-                converter.getConverter().convertInventoryToFile((Player) sender, args[2]);
-            } else if (args[0].equalsIgnoreCase(Constants.FILE_TO_INVENTORY)) {
-                converter.getConverter().convertFileToInventory((Player) sender, args[2]);
-            }
+            return;
+        }
+        if (args[0].equalsIgnoreCase(Constants.INVENTORY_TO_FILE)) {
+            converter.getConverter().convertInventoryToFile((Player) sender, args[2]);
+        } else if (args[0].equalsIgnoreCase(Constants.FILE_TO_INVENTORY)) {
+            converter.getConverter().convertFileToInventory((Player) sender, args[2]);
         }
     }
 
@@ -76,7 +76,7 @@ public class FPCCommand extends AbstractCommand {
             return;
         }
         Plugin targetPlugin = Bukkit.getPluginManager().getPlugin(args[1]);
-        if (targetPlugin == null) {
+        if (targetPlugin == null || !targetPlugin.isEnabled()) {
             Messages.PLUGIN_DOES_NOT_EXIST.sendMessage(humanEntity);
             return;
         }
@@ -252,8 +252,9 @@ public class FPCCommand extends AbstractCommand {
                          .collect(Collectors.toList());
         } else if (args0.equalsIgnoreCase(Constants.CONFIG)) {
             return Arrays.stream(Bukkit.getPluginManager().getPlugins())
-                         .map(Plugin::getName)
-                         .collect(Collectors.toList());
+                .filter(Plugin::isEnabled)
+                .map(Plugin::getName)
+                .collect(Collectors.toList());
         } else {
             return Collections.emptyList();
         }
@@ -274,10 +275,10 @@ public class FPCCommand extends AbstractCommand {
 
     private static List<String> getPluginConfigFiles(String args1) {
         Plugin targetPlugin = Bukkit.getPluginManager().getPlugin(args1);
-        if (targetPlugin != null) {
-            return fileList(targetPlugin.getDataFolder(), "");
+        if (targetPlugin == null || !targetPlugin.isEnabled()) {
+            return Collections.emptyList();
         }
-        return Collections.emptyList();
+        return fileList(targetPlugin.getDataFolder(), "");
     }
 
     private static List<String> fileList(File folder, String path) {
