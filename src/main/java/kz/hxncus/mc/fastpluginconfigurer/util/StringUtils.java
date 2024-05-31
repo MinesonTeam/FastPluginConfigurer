@@ -4,56 +4,55 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class StringUtils {
-    public int length(final CharSequence cs) {
-        return cs == null ? 0 : cs.length();
+    public int length(final CharSequence sequence) {
+        return sequence == null ? 0 : sequence.length();
     }
 
-    public boolean isEmpty(final CharSequence cs) {
-        return cs == null || cs.length() == 0;
+    public boolean isEmpty(final CharSequence sequence) {
+        return sequence == null || sequence.length() == 0;
     }
 
-    public boolean isNotEmpty(final CharSequence cs) {
-        return !isEmpty(cs);
+    public boolean isNotEmpty(final CharSequence sequence) {
+        return !isEmpty(sequence);
     }
 
-    public boolean isBlank(final CharSequence cs) {
-        final int strLen = length(cs);
+    public boolean isBlank(final CharSequence sequence) {
+        final int strLen = length(sequence);
         if (strLen == 0) {
             return true;
         }
         for (int i = 0; i < strLen; i++) {
-            if (!Character.isWhitespace(cs.charAt(i))) {
+            if (!Character.isWhitespace(sequence.charAt(i))) {
                 return false;
             }
         }
         return true;
     }
 
-    public boolean isNotBlank(final CharSequence cs) {
-        return !isBlank(cs);
+    public boolean isNotBlank(final CharSequence sequence) {
+        return !isBlank(sequence);
     }
 
-    public boolean contains(final CharSequence seq, final CharSequence searchSeq) {
-        if (seq == null || searchSeq == null) {
+    public boolean contains(final CharSequence sequence, final CharSequence searchSeq) {
+        if (sequence == null || searchSeq == null) {
             return false;
         }
-        return CharSequenceUtils.indexOf(seq, searchSeq, 0) >= 0;
+        return CharSequenceUtils.indexOf(sequence, searchSeq, 0) >= 0;
     }
 
-    public boolean contains(final CharSequence seq, final int searchChar) {
-        if (isEmpty(seq)) {
+    public boolean contains(final CharSequence sequence, final int searchChar) {
+        if (isEmpty(sequence)) {
             return false;
         }
-        return CharSequenceUtils.indexOf(seq, searchChar, 0) >= 0;
+        return CharSequenceUtils.indexOf(sequence, searchChar, 0) >= 0;
     }
 
-    public boolean isNumeric(final CharSequence cs) {
-        if (isEmpty(cs)) {
+    public boolean isNumeric(final CharSequence sequence) {
+        if (isEmpty(sequence)) {
             return false;
         }
-        final int sz = cs.length();
-        for (int i = 0; i < sz; i++) {
-            if (!Character.isDigit(cs.charAt(i))) {
+        for (int i = 0; i < sequence.length(); i++) {
+            if (!Character.isDigit(sequence.charAt(i))) {
                 return false;
             }
         }

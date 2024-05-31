@@ -62,7 +62,7 @@ public class ConfigItem {
             if (potionMeta.hasCustomEffects()) {
                 this.potionEffects = potionMeta.getCustomEffects();
             } else if (VersionUtil.IS_POTION_DATA_VERSION) {
-                this.potionEffects = List.of(PotionUtil.getPotionEffect(potionMeta));
+                this.potionEffects = Collections.singletonList(PotionUtil.getPotionEffect(potionMeta));
             }
         }
         if (VersionUtil.IS_SPAWN_EGG_META_VERSION && itemMeta instanceof SpawnEggMeta) {

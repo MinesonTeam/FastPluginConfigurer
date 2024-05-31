@@ -35,10 +35,10 @@ public class ZMenuHook extends AbstractHook {
         }
         InventoryManager manager = MenuPlugin.getInstance().getInventoryManager();
         Optional<fr.maxlego08.menu.api.Inventory> inventory = manager.getInventory(fileName);
-        if (inventory.isEmpty()) {
-            Messages.MENU_NOT_FOUND.sendMessage(player, fileName);
-        } else {
+        if (inventory.isPresent()) {
             storeConfigInInventory(player, ((Chest) state).getInventory(), (ZInventory) inventory.get());
+        } else {
+            Messages.MENU_NOT_FOUND.sendMessage(player, fileName);
         }
     }
 

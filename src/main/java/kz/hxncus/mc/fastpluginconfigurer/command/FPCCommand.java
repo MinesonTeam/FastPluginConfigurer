@@ -231,7 +231,7 @@ public class FPCCommand extends AbstractCommand {
     public List<String> complete(CommandSender sender, Command command, String... args) {
         int length = args.length;
         if (length == 1) {
-            return List.of("help", "reload", Constants.CONFIG, Constants.INVENTORY_TO_FILE, Constants.FILE_TO_INVENTORY);
+            return Arrays.asList("help", "reload", Constants.CONFIG, Constants.INVENTORY_TO_FILE, Constants.FILE_TO_INVENTORY);
         }
         String args0 = args[0];
         if (length == 2) {

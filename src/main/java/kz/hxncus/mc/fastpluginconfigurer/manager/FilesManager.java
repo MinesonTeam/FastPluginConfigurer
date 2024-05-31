@@ -45,8 +45,7 @@ public class FilesManager {
                     continue;
                 }
                 FileConfiguration embeddedConfig = YamlConfiguration.loadConfiguration(new InputStreamReader(resource));
-                config.options()
-                      .copyDefaults(true);
+                config.options().copyDefaults(true);
                 config.setDefaults(embeddedConfig);
                 if ("config.yml".equals(filePath)) {
                     config.set(Constants.VERSION, embeddedConfig.getInt(Constants.VERSION, 0));

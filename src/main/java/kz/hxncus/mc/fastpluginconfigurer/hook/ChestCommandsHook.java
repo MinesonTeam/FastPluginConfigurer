@@ -17,6 +17,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -60,7 +61,7 @@ public class ChestCommandsHook extends AbstractHook {
     public void configureInventory(String fileName, FileConfiguration config, Inventory chestInventory) {
         config.set("menu-settings.name", fileName);
         config.set("menu-settings.rows", chestInventory.getSize() / 9);
-        config.set("menu-settings.commands", List.of(fileName));
+        config.set("menu-settings.commands", Collections.singletonList(fileName));
     }
 
     @Override

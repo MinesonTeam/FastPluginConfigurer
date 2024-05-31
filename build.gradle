@@ -21,7 +21,7 @@ repositories {
 dependencies {
     compileOnly "org.spigotmc:spigot-api:1.20.2-R0.1-SNAPSHOT"
 
-    compileOnly(files('E:\\dev-server-1.16.5\\plugins\\DeluxeMenus-1.14.0-Release.jar'))
+    compileOnly(files('E:\\dev-server-1.16.5\\plugins\\DeluxeMenus-1.13.3-Release.jar'))
     compileOnly(files('E:\\dev-server-1.16.5\\plugins\\ChestCommands.jar'))
     compileOnly(files('E:\\dev-server-1.16.5\\plugins\\zmenu-1.0.3.1.jar'))
     compileOnly(files('E:\\dev-server-1.16.5\\plugins\\bettergui-9.6-shaded.jar'))
@@ -46,7 +46,7 @@ test {
     useJUnitPlatform()
 }
 
-def targetJavaVersion = 11
+def targetJavaVersion = 8
 
 java {
     def javaVersion = JavaVersion.toVersion(targetJavaVersion)
