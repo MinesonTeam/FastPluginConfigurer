@@ -43,7 +43,7 @@ body:
       description: What did you do to encounter this bug? Please be as detailed as possible!
       placeholder: |
         - I converted file "inventory.yml" into chest...
-        - I ran the command `/fpc config Essentials`...
+        - I ran the command `/fpc config FastPluginConfigurer`...
     validations:
       required: true
   - type: textarea
@@ -68,7 +68,7 @@ body:
       label: Server logs and FastPluginConfigurer config
       description: |
         If you think it will be helpful, please include any server logs.
-        If you are using the CommandAPI plugin version, please include the FastPluginConfigurer's `config.yml` file from `plugins/FastPluginConfigurer/config.yml`.
+        Also please provide the FastPluginConfigurer's `config.yml` file from `plugins/FastPluginConfigurer/config.yml`.
       placeholder: Logs and configs (if you think it'll help!)
     validations:
       required: false
