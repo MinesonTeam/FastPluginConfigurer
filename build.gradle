@@ -40,6 +40,7 @@ compileTestJava.options.encoding = 'UTF-8'
 
 shadowJar {
     destinationDirectory = file("E:\\dev-server-1.16.5\\plugins")
+    destinationDirectory = file("$rootDir/bin/")
 }
 
 test {
