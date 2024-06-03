@@ -5,6 +5,7 @@ import kz.hxncus.mc.fastpluginconfigurer.util.Constants;
 import kz.hxncus.mc.fastpluginconfigurer.util.StringUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.SneakyThrows;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -17,6 +18,7 @@ public class LanguageManager {
     private final FileConfiguration langConfig;
     private String lang;
 
+    @SneakyThrows
     public LanguageManager(FastPluginConfigurer plugin) {
         this.plugin = plugin;
         lang = plugin.getConfig().getString("lang");
@@ -24,7 +26,10 @@ public class LanguageManager {
             plugin.getLogger().warning(() -> String.format("Unknown language '%s'. Selected 'en' as the default language.", lang));
             lang = "en";
         }
-        File file = new File(plugin.getDirectoryManager().getTranslationsDir() + File.separator + lang + Constants.YML_EXPANSION);
+        File file = new File(plugin.getDirectoryManager().getTranslationsDir(), lang + Constants.YML_EXPANSION);
         this.langConfig = YamlConfiguration.loadConfiguration(file);
+
+        langConfig.load(file);
+        plugin.getLogger().info(() -> String.format("Selected '%s' as the default language.", lang));
     }
 }
