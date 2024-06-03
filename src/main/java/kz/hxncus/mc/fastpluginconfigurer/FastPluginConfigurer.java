@@ -77,6 +77,8 @@ public final class FastPluginConfigurer extends JavaPlugin {
     }
 
     private void registerMetrics(FastPluginConfigurer plugin) {
+        if (!getConfig().getBoolean("metrics")) return;
+
         Metrics metrics = new Metrics(plugin, 22084);
         metrics.addCustomChart(new SimplePie("used_language", () -> languageManager.getLang()));
     }
