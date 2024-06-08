@@ -8,8 +8,9 @@ import kz.hxncus.mc.fastpluginconfigurer.manager.DirectoryManager;
 import kz.hxncus.mc.fastpluginconfigurer.manager.FilesManager;
 import kz.hxncus.mc.fastpluginconfigurer.manager.InventoryManager;
 import kz.hxncus.mc.fastpluginconfigurer.manager.LanguageManager;
-import kz.hxncus.mc.fastpluginconfigurer.util.Metrics;
 import lombok.Getter;
+import org.bstats.bukkit.Metrics;
+import org.bstats.charts.SimplePie;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -31,6 +32,7 @@ public final class FastPluginConfigurer extends JavaPlugin {
     public static ConfigSession getConfigSession(final UUID uuid) {
         return CONFIG_SESSION_MAP.computeIfAbsent(uuid, ConfigSession::new);
     }
+
     public static ConfigSession removeSession(final UUID uuid) {
         return CONFIG_SESSION_MAP.remove(uuid);
     }
@@ -75,7 +77,9 @@ public final class FastPluginConfigurer extends JavaPlugin {
     }
 
     private void registerMetrics(FastPluginConfigurer plugin) {
+        if (!getConfig().getBoolean("metrics")) return;
+
         Metrics metrics = new Metrics(plugin, 22084);
-        metrics.addCustomChart(new Metrics.SimplePie("used_language", () -> languageManager.getLang()));
+        metrics.addCustomChart(new SimplePie("used_language", () -> languageManager.getLang()));
     }
 }

@@ -1,6 +1,5 @@
 package kz.hxncus.mc.fastpluginconfigurer.hook;
 
-import fr.maxlego08.menu.MenuPlugin;
 import fr.maxlego08.menu.ZInventory;
 import fr.maxlego08.menu.api.InventoryManager;
 import fr.maxlego08.menu.api.button.Button;
@@ -16,13 +15,26 @@ import org.bukkit.block.Chest;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.plugin.RegisteredServiceProvider;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static org.bukkit.Bukkit.getServer;
 
 public class ZMenuHook extends AbstractHook {
     public ZMenuHook(final FastPluginConfigurer plugin) {
         super(plugin);
+    }
+
+    private <T> T getProvider(Class<T> classz) {
+        RegisteredServiceProvider<T> provider = getServer().getServicesManager().getRegistration(classz);
+        return provider == null ? null : provider.getProvider() != null ? (T) provider.getProvider() : null;
     }
 
     @Override
@@ -33,7 +45,7 @@ public class ZMenuHook extends AbstractHook {
             Messages.MUST_LOOKING_AT_DOUBLE_CHEST.sendMessage(player);
             return;
         }
-        InventoryManager manager = MenuPlugin.getInstance().getInventoryManager();
+        InventoryManager manager = getProvider(InventoryManager.class);
         Optional<fr.maxlego08.menu.api.Inventory> inventory = manager.getInventory(fileName);
         if (inventory.isPresent()) {
             storeConfigInInventory(player, ((Chest) state).getInventory(), (ZInventory) inventory.get());
@@ -78,10 +90,11 @@ public class ZMenuHook extends AbstractHook {
 
     @Override
     public List<String> getAllFileNames() {
-        return MenuPlugin.getInstance().getInventoryManager().getInventories()
-                         .stream()
-                         .map(fr.maxlego08.menu.api.Inventory::getFileName)
-                         .collect(Collectors.toList());
+        InventoryManager inventoryManager = getProvider(InventoryManager.class);
+        return inventoryManager.getInventories()
+                .stream()
+                .map(fr.maxlego08.menu.api.Inventory::getFileName)
+                .collect(Collectors.toList());
     }
 
     public enum AttributeType {
@@ -97,16 +110,16 @@ public class ZMenuHook extends AbstractHook {
         BANNER(new BannerColorAttribute()),
         FLAGS(new ItemFlagsAttribute()),
         POTION_EFFECTS(new PotionEffectsAttribute(potionEffects -> potionEffects.stream()
-                                                                                .filter(Objects::nonNull)
-                                                                                .map(potionEffect -> potionEffect.getType().getName() + ";" + potionEffect.getDuration() + ";" + potionEffect.getAmplifier())
-                                                                                .collect(Collectors.toList()))),
+                .filter(Objects::nonNull)
+                .map(potionEffect -> potionEffect.getType().getName() + ";" + potionEffect.getDuration() + ";" + potionEffect.getAmplifier())
+                .collect(Collectors.toList()))),
         BANNER_PATTERNS(new BannerPatternsAttribute(patterns -> patterns.stream()
-                                                                    .map(pattern -> pattern.getColor().name() + ";" + pattern.getPattern().name())
-                                                                    .collect(Collectors.toList()))),
+                .map(pattern -> pattern.getColor().name() + ";" + pattern.getPattern().name())
+                .collect(Collectors.toList()))),
         ENCHANTS(new EnchantmentsAttribute(map -> map.entrySet()
-                                                         .stream()
-                                                         .map(entry -> VersionUtil.getEnchantmentName(entry.getKey()).toUpperCase(Locale.ROOT) + ";" + entry.getValue())
-                                                         .collect(Collectors.toList())));
+                .stream()
+                .map(entry -> VersionUtil.getEnchantmentName(entry.getKey()).toUpperCase(Locale.ROOT) + ";" + entry.getValue())
+                .collect(Collectors.toList())));
 
         final Attribute attribute;
 
