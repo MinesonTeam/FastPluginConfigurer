@@ -1,9 +1,9 @@
 package kz.hxncus.mc.fastpluginconfigurer.listener;
 
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
-import kz.hxncus.mc.fastpluginconfigurer.config.ConfigSession;
+import kz.hxncus.mc.fastpluginconfigurer.cache.ConfigCache;
 import kz.hxncus.mc.fastpluginconfigurer.util.FileUtil;
-import kz.hxncus.mc.fastpluginconfigurer.util.NumberUtils;
+import kz.hxncus.mc.fastpluginconfigurer.util.NumberUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -25,7 +25,7 @@ public class PlayerListener implements Listener {
         this.plugin = plugin;
     }
 
-    private void openLastClosedInventory(Player player, ConfigSession session, File file) {
+    private void openLastClosedInventory(Player player, ConfigCache session, File file) {
         openLastClosedInventory(player, session.getPluginName(), file.getPath());
     }
 
@@ -35,24 +35,24 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerChatEvent(AsyncPlayerChatEvent event) {
-        ConfigSession configSession = FastPluginConfigurer.getConfigSession(event.getPlayer().getUniqueId());
-        ConfigSession.Chat chat = configSession.getChat();
-        if (chat == ConfigSession.Chat.NOTHING) {
+        ConfigCache configCache = plugin.getCacheManager().getConfigCache(event.getPlayer().getUniqueId());
+        ConfigCache.ChatState chatState = configCache.getChatState();
+        if (chatState == ConfigCache.ChatState.NOTHING) {
             return;
         }
         event.setCancelled(true);
-        configSession.setChat(ConfigSession.Chat.NOTHING);
-        openLastClosedInventory(event.getPlayer(), configSession, configSession.getFile());
+        configCache.setChatState(ConfigCache.ChatState.NOTHING);
+        openLastClosedInventory(event.getPlayer(), configCache, configCache.getFile());
         if ("cancel".equalsIgnoreCase(event.getMessage())) {
             return;
         }
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(configSession.getFile());
-        if (chat == ConfigSession.Chat.ADDING_NEW_KEY) {
-            config.set(configSession.getKeyPath().isEmpty() ? event.getMessage() : configSession.getKeyPath() + "." + event.getMessage(), "");
-        } else if (chat == ConfigSession.Chat.SETTING_KEY_VALUE) {
-            config.set(configSession.getKeyPath(), convert(event.getMessage()));
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(configCache.getFile());
+        if (chatState == ConfigCache.ChatState.ADDING_NEW_KEY) {
+            config.set(configCache.getKeyPath().isEmpty() ? event.getMessage() : configCache.getKeyPath() + "." + event.getMessage(), "");
+        } else if (chatState == ConfigCache.ChatState.SETTING_KEY_VALUE) {
+            config.set(configCache.getKeyPath(), convert(event.getMessage()));
         }
-        FileUtil.save(config, configSession.getFile());
+        FileUtil.save(config, configCache.getFile());
     }
 
     private Object convert(String message) {
@@ -74,8 +74,8 @@ public class PlayerListener implements Listener {
             return objects;
         } else if (isMessageQuoted(message)) {
             return message.substring(1, message.length() - 1);
-        } else if (NumberUtils.isCreatable(message)) {
-            return NumberUtils.createNumber(message);
+        } else if (NumberUtil.isCreatable(message)) {
+            return NumberUtil.createNumber(message);
         } else if ("true".equalsIgnoreCase(message)) {
             return true;
         } else if ("false".equalsIgnoreCase(message)) {
@@ -92,6 +92,6 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        FastPluginConfigurer.removeSession(event.getPlayer().getUniqueId());
+        plugin.getCacheManager().removeCache(event.getPlayer().getUniqueId());
     }
 }

@@ -21,8 +21,8 @@ import java.util.function.Predicate;
 
 @Getter
 @EqualsAndHashCode
-public abstract class AbstractInventory implements FastInventory {
-    private final FastPluginConfigurer plugin = FastPluginConfigurer.getInstance();
+public abstract class AbstractInventory implements IInventory {
+    private final FastPluginConfigurer plugin = FastPluginConfigurer.get();
     private final Inventory inventory;
     private final Map<Integer, Consumer<InventoryClickEvent>> itemClickHandlers = new ConcurrentHashMap<>();
     private final List<Consumer<InventoryDragEvent>> dragHandlers = new ArrayList<>();
@@ -109,7 +109,7 @@ public abstract class AbstractInventory implements FastInventory {
     }
 
     @NonNull
-    public FastInventory setItems(int slotFrom, int slotTo, ItemStack item, Consumer<InventoryClickEvent> handler) {
+    public IInventory setItems(int slotFrom, int slotTo, ItemStack item, Consumer<InventoryClickEvent> handler) {
         for (int i = slotFrom; i <= slotTo; i++) {
             setItem(i, item, handler);
         }
@@ -117,12 +117,12 @@ public abstract class AbstractInventory implements FastInventory {
     }
 
     @NonNull
-    public FastInventory setItems(int slotFrom, int slotTo, ItemStack item) {
+    public IInventory setItems(int slotFrom, int slotTo, ItemStack item) {
         return setItems(slotFrom, slotTo, item, null);
     }
 
     @NonNull
-    public FastInventory setItems(ItemStack item, Consumer<InventoryClickEvent> handler, int @NonNull... slots) {
+    public IInventory setItems(ItemStack item, Consumer<InventoryClickEvent> handler, int @NonNull... slots) {
         for (int slot : slots) {
             setItem(slot, item, handler);
         }
@@ -130,12 +130,12 @@ public abstract class AbstractInventory implements FastInventory {
     }
 
     @NonNull
-    public FastInventory setItems(ItemStack item, int @NonNull... slots) {
+    public IInventory setItems(ItemStack item, int @NonNull... slots) {
         return setItems(item, null, slots);
     }
 
     @NonNull
-    public FastInventory removeItems(int @NonNull... slots) {
+    public IInventory removeItems(int @NonNull... slots) {
         for (int slot : slots) {
             removeItem(slot);
         }
@@ -143,7 +143,7 @@ public abstract class AbstractInventory implements FastInventory {
     }
 
     @NonNull
-    public FastInventory removeItems(int slotFrom, int slotTo) {
+    public IInventory removeItems(int slotFrom, int slotTo) {
         for (int i = slotFrom; i <= slotTo; i++) {
             removeItem(i);
         }
@@ -151,38 +151,38 @@ public abstract class AbstractInventory implements FastInventory {
     }
 
     @NonNull
-    public FastInventory removeItem(int slot) {
+    public IInventory removeItem(int slot) {
         this.inventory.clear(slot);
         this.itemClickHandlers.remove(slot);
         return this;
     }
 
     @NonNull
-    public FastInventory setCloseFilter(Predicate<Player> closeFilter) {
+    public IInventory setCloseFilter(Predicate<Player> closeFilter) {
         this.closeFilter = closeFilter;
         return this;
     }
 
     @Override
-    public FastInventory addDragHandler(Consumer<InventoryDragEvent> dragHandler) {
+    public IInventory addDragHandler(Consumer<InventoryDragEvent> dragHandler) {
         dragHandlers.add(dragHandler);
         return this;
     }
 
     @NonNull
-    public FastInventory addOpenHandler(Consumer<InventoryOpenEvent> openHandler) {
+    public IInventory addOpenHandler(Consumer<InventoryOpenEvent> openHandler) {
         openHandlers.add(openHandler);
         return this;
     }
 
     @NonNull
-    public FastInventory addCloseHandler(Consumer<InventoryCloseEvent> closeHandler) {
+    public IInventory addCloseHandler(Consumer<InventoryCloseEvent> closeHandler) {
         closeHandlers.add(closeHandler);
         return this;
     }
 
     @NonNull
-    public FastInventory addClickHandler(Consumer<InventoryClickEvent> clickHandler) {
+    public IInventory addClickHandler(Consumer<InventoryClickEvent> clickHandler) {
         clickHandlers.add(clickHandler);
         return this;
     }

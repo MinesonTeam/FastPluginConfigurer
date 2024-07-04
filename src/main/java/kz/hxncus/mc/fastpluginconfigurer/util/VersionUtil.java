@@ -35,7 +35,7 @@ public class VersionUtil {
                 stringBuilder.append(patch.replace(".", ""));
             }
         }
-        Integer version = NumberUtils.createInteger(stringBuilder.toString());
+        Integer version = NumberUtil.createInteger(stringBuilder.toString());
         if (version == null) {
             throw new RuntimeException("Could not retrieve server version!");
         }

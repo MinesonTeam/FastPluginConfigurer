@@ -12,4 +12,3 @@ commands:
     permission: "fpc"
     aliases:
       - fpc
-      - pluginconfigurer

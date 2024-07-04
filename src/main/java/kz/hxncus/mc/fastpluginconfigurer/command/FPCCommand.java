@@ -1,8 +1,9 @@
 package kz.hxncus.mc.fastpluginconfigurer.command;
 
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
+import kz.hxncus.mc.fastpluginconfigurer.cache.ConfigCache;
 import kz.hxncus.mc.fastpluginconfigurer.config.ConfigMaterial;
-import kz.hxncus.mc.fastpluginconfigurer.config.ConfigSession;
+import kz.hxncus.mc.fastpluginconfigurer.config.Messages;
 import kz.hxncus.mc.fastpluginconfigurer.hook.Convertible;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.AbstractInventory;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.EmptyInventory;
@@ -34,7 +35,7 @@ public class FPCCommand extends AbstractCommand {
     @Override
     public void execute(CommandSender sender, Command command, String label, String... args) {
         if (!(sender instanceof Player)) {
-            Messages.MUST_BE_PLAYER.sendMessage(sender);
+            Messages.MUST_BE_PLAYER.send(sender);
             return;
         }
         if (args.length < 1) {
@@ -45,9 +46,8 @@ public class FPCCommand extends AbstractCommand {
             configSubCommand((HumanEntity) sender, label, args);
         } else if ("reload".equalsIgnoreCase(args[0])) {
             plugin.reloadConfig();
-            plugin.registerStaff();
-            Messages.updateAllMessages();
-            Messages.CONFIG_SUCCESSFULLY_RELOADED.sendMessage(sender);
+            plugin.onEnable();
+            Messages.CONFIG_SUCCESSFULLY_RELOADED.send(sender);
         } else {
             sendHelpMessage(sender, label);
         }
@@ -60,7 +60,7 @@ public class FPCCommand extends AbstractCommand {
         }
         Convertible.Converters converter = Convertible.Converters.valueOfIgnoreCase(args[1]);
         if (converter == null || converter.getConverter() == null) {
-            Messages.CONVERTER_TYPE_DOES_NOT_EXIST.sendMessage(sender);
+            Messages.CONVERTER_TYPE_DOES_NOT_EXIST.send(sender);
             return;
         }
         if (args[0].equalsIgnoreCase(Constants.INVENTORY_TO_FILE)) {
@@ -77,22 +77,22 @@ public class FPCCommand extends AbstractCommand {
         }
         Plugin targetPlugin = Bukkit.getPluginManager().getPlugin(args[1]);
         if (targetPlugin == null || !targetPlugin.isEnabled()) {
-            Messages.PLUGIN_DOES_NOT_EXIST.sendMessage(humanEntity);
+            Messages.PLUGIN_DOES_NOT_EXIST.send(humanEntity);
             return;
         }
         File file;
         if (args.length < 3) {
-            file = new File(targetPlugin.getDataFolder(), "config.yml");
+            file = new File(targetPlugin.getDataFolder(), "settings.yml");
         } else {
             file = new File(targetPlugin.getDataFolder(), args[2]);
         }
         if (!file.exists()) {
-            Messages.FILE_DOES_NOT_EXIST.sendMessage(humanEntity, file.getName());
+            Messages.FILE_DOES_NOT_EXIST.send(humanEntity, file.getName());
             return;
         }
-        ConfigSession configSession = FastPluginConfigurer.getConfigSession(humanEntity.getUniqueId());
-        configSession.setFile(file);
-        configSession.setPluginName(args[1]);
+        ConfigCache configCache = plugin.getCacheManager().getConfigCache(humanEntity.getUniqueId());
+        configCache.setFile(file);
+        configCache.setPluginName(args[1]);
 
         FileConfiguration config = YamlConfiguration.loadConfiguration(file);
         FileUtil.reload(config, file);
@@ -107,8 +107,8 @@ public class FPCCommand extends AbstractCommand {
         while (iterator.hasNext()) {
             if (fastInventory.getInventory().firstEmpty() > 44) {
                 AbstractInventory abstractInventory = createFastInventory(lastPluginName);
-                fastInventory.setItem(53, Constants.ARROW_ITEM.setDisplayName(Messages.NEXT_PAGE.getMessage()).build(), event -> event.getWhoClicked().openInventory(abstractInventory.getInventory()));
-                abstractInventory.setItem(45, Constants.ARROW_ITEM.setDisplayName(Messages.PREVIOUS_PAGE.getMessage()).build(), event -> event.getWhoClicked().openInventory(fastInventory.getInventory()));
+                fastInventory.setItem(53, Constants.ARROW_ITEM.setDisplayName(Messages.NEXT_PAGE.toString()).build(), event -> event.getWhoClicked().openInventory(abstractInventory.getInventory()));
+                abstractInventory.setItem(45, Constants.ARROW_ITEM.setDisplayName(Messages.PREVIOUS_PAGE.toString()).build(), event -> event.getWhoClicked().openInventory(fastInventory.getInventory()));
                 setupConfigInventories(iterator, abstractInventory, section, lastPluginName);
                 return;
             }
@@ -126,30 +126,30 @@ public class FPCCommand extends AbstractCommand {
     }
     
     private void addNewKeyItem(AbstractInventory inventory, String currentPath) {
-        inventory.addItem(Constants.NETHER_STAR.setDisplayName(Messages.CLICK_TO_ADD_NEW_KEY.getMessage()).build(), event -> {
+        inventory.addItem(Constants.NETHER_STAR.setDisplayName(Messages.CLICK_TO_ADD_NEW_KEY.toString()).build(), event -> {
             HumanEntity humanEntity = event.getWhoClicked();
             humanEntity.closeInventory();
             if (currentPath == null) {
-                Messages.INVALID_PATH.sendMessage(humanEntity);
+                Messages.INVALID_PATH.send(humanEntity);
                 return;
             }
-            ConfigSession player = FastPluginConfigurer.getConfigSession(humanEntity.getUniqueId());
-            player.setChat(ConfigSession.Chat.ADDING_NEW_KEY);
+            ConfigCache player = plugin.getCacheManager().getConfigCache(humanEntity.getUniqueId());
+            player.setChatState(ConfigCache.ChatState.ADDING_NEW_KEY);
             player.setKeyPath(currentPath);
-            Messages.WRITE_NEW_KEY_IN_CHAT.sendMessage(humanEntity, StringUtils.isEmpty(currentPath) ? "" : Messages.PATH.getFormattedMessage(currentPath));
+            Messages.WRITE_NEW_KEY_IN_CHAT.send(humanEntity, StringUtil.isEmpty(currentPath) ? "" : Messages.PATH.toString(currentPath));
         });
     }
 
     private void setupKey(String lastPluginName, AbstractInventory inventory, ConfigurationSection section, String path) {
         ConfigurationSection sections = section.getConfigurationSection(path);
         String currentPath = section.getCurrentPath();
-        String fullPath = StringUtils.isEmpty(currentPath) ? path : String.format("%s.%s", currentPath, path);
+        String fullPath = StringUtil.isEmpty(currentPath) ? path : String.format("%s.%s", currentPath, path);
         if (sections != null) {
             AbstractInventory fastInventory = createFastInventory(lastPluginName);
-            inventory.addItem(new ItemBuilder(VersionUtil.SIGN).setDisplayName(Messages.SECTION.getFormattedMessage(path))
-                    .addLore("", Messages.CLICK_TO_OPEN_SECTION.getMessage(), Messages.SHIFT_CLICK_TO_EDIT_SECTION.getMessage())
+            inventory.addItem(new ItemBuilder(VersionUtil.SIGN).setDisplayName(Messages.SECTION.toString(path))
+                    .addLore("", Messages.CLICK_TO_OPEN_SECTION.toString(), Messages.SHIFT_CLICK_TO_EDIT_SECTION.toString())
                     .build(), event -> onSectionClick(event, fastInventory, fullPath));
-            fastInventory.setItem(45, Constants.ARROW_ITEM.setDisplayName(Messages.PREVIOUS_PAGE.getMessage()).build(),
+            fastInventory.setItem(45, Constants.ARROW_ITEM.setDisplayName(Messages.PREVIOUS_PAGE.toString()).build(),
                     event -> event.getWhoClicked().openInventory(inventory.getInventory()));
             setupConfigInventories(sections.getKeys(false).iterator(), fastInventory, sections, lastPluginName);
             return;
@@ -168,9 +168,9 @@ public class FPCCommand extends AbstractCommand {
 
     private void addKeyItemToInventory(AbstractInventory inventory, Object value, String fullPath) {
         inventory.addItem(new ItemBuilder(getMaterialFromValue(value))
-            .setDisplayName(Messages.KEY.getFormattedMessage(fullPath))
-            .addLore(Messages.CURRENT_VALUE.getMessage(), Messages.VALUE.getFormattedMessage(StringUtils.isEmpty(value.toString()) ? Messages.EMPTY_VALUE : value))
-            .addLore("", Messages.CLICK_TO_CHANGE_CURRENT_VALUE.getMessage(), Messages.SHIFT_CLICK_TO_COPY_CURRENT_VALUE.getMessage())
+            .setDisplayName(Messages.KEY.toString(fullPath))
+            .addLore(Messages.CURRENT_VALUE.toString(), Messages.VALUE.toString(StringUtil.isEmpty(value.toString()) ? Messages.EMPTY_VALUE : value))
+            .addLore("", Messages.CLICK_TO_CHANGE_CURRENT_VALUE.toString(), Messages.SHIFT_CLICK_TO_COPY_CURRENT_VALUE.toString())
             .setAmount(value instanceof Integer ? (Integer) value : 1)
             .build(), event -> onItemClick(event, fullPath, value.toString()));
     }
@@ -186,21 +186,21 @@ public class FPCCommand extends AbstractCommand {
 
     private void handlePlayerPathSetting(String fullPath, HumanEntity humanEntity) {
         humanEntity.closeInventory();
-        ConfigSession player = FastPluginConfigurer.getConfigSession(humanEntity.getUniqueId());
-        player.setChat(ConfigSession.Chat.SETTING_KEY_VALUE);
+        ConfigCache player = plugin.getCacheManager().getConfigCache(humanEntity.getUniqueId());
+        player.setChatState(ConfigCache.ChatState.SETTING_KEY_VALUE);
         player.setKeyPath(fullPath);
-        Messages.WRITE_VALUE_IN_CHAT.sendMessage(humanEntity, fullPath);
+        Messages.WRITE_VALUE_IN_CHAT.send(humanEntity, fullPath);
     }
 
     private void onItemClick(InventoryClickEvent event, String fullPath, String valueString) {
         Player player = (Player) event.getWhoClicked();
         if (event.getClick().isShiftClick()) {
             if (valueString.length() > 256) {
-                Messages.VALUE_TOO_LONG.sendMessage(player);
+                Messages.VALUE_TOO_LONG.send(player);
                 return;
             }
             player.closeInventory();
-            TextComponent textComponent = new TextComponent(Messages.CLICK_MESSAGE_TO_COPY_VALUE.getFormattedMessage(valueString));
+            TextComponent textComponent = new TextComponent(Messages.CLICK_MESSAGE_TO_COPY_VALUE.toString(valueString));
             textComponent.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, valueString));
             player.spigot().sendMessage(textComponent);
             return;
@@ -221,10 +221,10 @@ public class FPCCommand extends AbstractCommand {
     }
 
     private void sendHelpMessage(CommandSender sender, String label) {
-        Messages.HELP.sendMessage(sender);
-        Messages.HELP_CONFIG.sendMessage(sender, label);
-        Messages.HELP_INVENTORYTOFILE.sendMessage(sender, label);
-        Messages.HELP_FILETOINVENTORY.sendMessage(sender, label);
+        Messages.HELP.send(sender);
+        Messages.HELP_CONFIG.send(sender, label);
+        Messages.HELP_INVENTORYTOFILE.send(sender, label);
+        Messages.HELP_FILETOINVENTORY.send(sender, label);
     }
 
     @Override

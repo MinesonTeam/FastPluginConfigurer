@@ -1,13 +1,12 @@
 package kz.hxncus.mc.fastpluginconfigurer;
 
+import kz.hxncus.mc.fastpluginconfigurer.cache.CacheManager;
 import kz.hxncus.mc.fastpluginconfigurer.command.FPCCommand;
-import kz.hxncus.mc.fastpluginconfigurer.config.ConfigSession;
+import kz.hxncus.mc.fastpluginconfigurer.config.ConfigManager;
+import kz.hxncus.mc.fastpluginconfigurer.config.Settings;
+import kz.hxncus.mc.fastpluginconfigurer.inventory.InventoryManager;
 import kz.hxncus.mc.fastpluginconfigurer.listener.DupeFixerListener;
 import kz.hxncus.mc.fastpluginconfigurer.listener.PlayerListener;
-import kz.hxncus.mc.fastpluginconfigurer.manager.DirectoryManager;
-import kz.hxncus.mc.fastpluginconfigurer.manager.FilesManager;
-import kz.hxncus.mc.fastpluginconfigurer.manager.InventoryManager;
-import kz.hxncus.mc.fastpluginconfigurer.manager.LanguageManager;
 import lombok.Getter;
 import org.bstats.bukkit.Metrics;
 import org.bstats.charts.SimplePie;
@@ -15,39 +14,23 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-
 @Getter
 public final class FastPluginConfigurer extends JavaPlugin {
-    @Getter
     private static FastPluginConfigurer instance;
-    private static final Map<UUID, ConfigSession> CONFIG_SESSION_MAP = new ConcurrentHashMap<>();
     private InventoryManager inventoryManager;
-    private DirectoryManager directoryManager;
-    private LanguageManager languageManager;
-    private FilesManager filesManager;
+    private ConfigManager configManager;
+    private CacheManager cacheManager;
 
-    public static ConfigSession getConfigSession(final UUID uuid) {
-        return CONFIG_SESSION_MAP.computeIfAbsent(uuid, ConfigSession::new);
-    }
-
-    public static ConfigSession removeSession(final UUID uuid) {
-        return CONFIG_SESSION_MAP.remove(uuid);
-    }
-
-    @Override
-    public void onLoad() {
+    public FastPluginConfigurer() {
         instance = this;
+    }
+
+    public static FastPluginConfigurer get() {
+        return instance;
     }
 
     @Override
     public void onEnable() {
-        registerStaff();
-    }
-
-    public void registerStaff() {
         registerManagers(this);
         registerEvents(this, Bukkit.getPluginManager());
         registerCommands(this);
@@ -60,10 +43,9 @@ public final class FastPluginConfigurer extends JavaPlugin {
     }
 
     public void registerManagers(FastPluginConfigurer plugin) {
-        filesManager = new FilesManager(plugin);
-        directoryManager = new DirectoryManager(plugin);
-        languageManager = new LanguageManager(plugin);
+        configManager = new ConfigManager(plugin);
         inventoryManager = new InventoryManager(plugin);
+        cacheManager = new CacheManager();
     }
 
     private void registerCommands(FastPluginConfigurer plugin) {
@@ -77,9 +59,10 @@ public final class FastPluginConfigurer extends JavaPlugin {
     }
 
     private void registerMetrics(FastPluginConfigurer plugin) {
-        if (!getConfig().getBoolean("metrics")) return;
-
+        if (!Settings.METRICS.toBool(true)) {
+            return;
+        }
         Metrics metrics = new Metrics(plugin, 22084);
-        metrics.addCustomChart(new SimplePie("used_language", () -> languageManager.getLang()));
+        metrics.addCustomChart(new SimplePie("used_language", Settings.PLUGIN_LANGUAGE::toString));
     }
 }

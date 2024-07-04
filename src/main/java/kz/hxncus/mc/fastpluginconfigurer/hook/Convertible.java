@@ -43,14 +43,14 @@ public interface Convertible {
                 return;
             }
             try {
-                converter = clazz.getConstructor(FastPluginConfigurer.class).newInstance(FastPluginConfigurer.getInstance());
+                converter = clazz.getConstructor(FastPluginConfigurer.class).newInstance(FastPluginConfigurer.get());
                 isEnabled = true;
             } catch (InvocationTargetException | InstantiationException | IllegalAccessException | NoSuchMethodException e) {
                 converter = null;
                 isEnabled = false;
                 throw new RuntimeException(e);
             }
-            FastPluginConfigurer.getInstance().getLogger().info("Hook " + clazz.getSimpleName() + " is enabled successfully.");
+            FastPluginConfigurer.get().getLogger().info("Hook " + clazz.getSimpleName() + " is enabled successfully.");
         }
 
         public static Converters valueOfIgnoreCase(String name) {

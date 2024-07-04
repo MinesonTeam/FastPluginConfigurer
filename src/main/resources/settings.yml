@@ -1,0 +1,5 @@
+# Please don't change the plugin's version.
+version: 12
+lang: en
+debug: false
+metrics: true

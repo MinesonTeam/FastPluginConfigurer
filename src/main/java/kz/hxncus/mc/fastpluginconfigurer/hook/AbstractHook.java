@@ -2,9 +2,9 @@ package kz.hxncus.mc.fastpluginconfigurer.hook;
 
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
 import kz.hxncus.mc.fastpluginconfigurer.config.ConfigItem;
+import kz.hxncus.mc.fastpluginconfigurer.config.Messages;
 import kz.hxncus.mc.fastpluginconfigurer.util.Constants;
 import kz.hxncus.mc.fastpluginconfigurer.util.FileUtil;
-import kz.hxncus.mc.fastpluginconfigurer.util.Messages;
 import kz.hxncus.mc.fastpluginconfigurer.util.VersionUtil;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -27,15 +27,15 @@ public abstract class AbstractHook implements Convertible {
 
     @Override
     public void convertInventoryToFile(Player player, String fileName) {
-        File file = new File(plugin.getDirectoryManager().getConvertedDir(), fileName.endsWith(Constants.YML_EXPANSION) ? fileName : fileName + Constants.YML_EXPANSION);
+        File file = new File(plugin.getConfigManager().getConvertedFolder(), fileName.endsWith(Constants.YML_EXPANSION) ? fileName : fileName + Constants.YML_EXPANSION);
         if (file.exists()) {
-            Messages.FILE_ALREADY_EXISTS.sendMessage(player, fileName);
+            Messages.FILE_ALREADY_EXISTS.send(player, fileName);
             return;
         }
         Block targetBlock = VersionUtil.getTargetBlock(player, 5);
         BlockState state = targetBlock == null ? null : targetBlock.getState();
         if (!(state instanceof Chest)) {
-            Messages.MUST_LOOKING_AT_DOUBLE_CHEST.sendMessage(player);
+            Messages.MUST_LOOKING_AT_DOUBLE_CHEST.send(player);
             return;
         }
         Inventory chestInventory = ((Chest) state).getInventory();
@@ -50,6 +50,6 @@ public abstract class AbstractHook implements Convertible {
             storeItemInConfig(config, new ConfigItem(item, i), count++);
         }
         FileUtil.reload(config, file);
-        Messages.CHEST_SUCCESSFULLY_STORED_INTO_FILE.sendMessage(player, fileName);
+        Messages.CHEST_SUCCESSFULLY_STORED_INTO_FILE.send(player, fileName);
     }
 }

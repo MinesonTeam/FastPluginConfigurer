@@ -3,7 +3,7 @@ package kz.hxncus.mc.fastpluginconfigurer.hook;
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
 import kz.hxncus.mc.fastpluginconfigurer.attribute.*;
 import kz.hxncus.mc.fastpluginconfigurer.config.ConfigItem;
-import kz.hxncus.mc.fastpluginconfigurer.util.Messages;
+import kz.hxncus.mc.fastpluginconfigurer.config.Messages;
 import kz.hxncus.mc.fastpluginconfigurer.util.VersionUtil;
 import me.hsgamer.bettergui.BetterGUI;
 import me.hsgamer.bettergui.api.menu.Menu;
@@ -33,7 +33,7 @@ public class BetterGUIHook extends AbstractHook {
         Block targetBlock = VersionUtil.getTargetBlock(player, 5);
         BlockState state = targetBlock == null ? null : targetBlock.getState();
         if (!(state instanceof Chest)) {
-            Messages.MUST_LOOKING_AT_DOUBLE_CHEST.sendMessage(player);
+            Messages.MUST_LOOKING_AT_DOUBLE_CHEST.send(player);
             return;
         }
         Menu menu = BetterGUI.getInstance().getMenuManager().getMenu(fileName);
@@ -41,7 +41,7 @@ public class BetterGUIHook extends AbstractHook {
             storeConfigItemsInInventory(player, ((Chest) state).getInventory(), ((SimpleMenu) menu).getButtonMap());
             return;
         }
-        Messages.MENU_NOT_FOUND.sendMessage(player, fileName);
+        Messages.MENU_NOT_FOUND.send(player, fileName);
     }
 
     private void storeConfigItemsInInventory(Player player, Inventory chestInventory, SimpleButtonMap buttonMap) {
@@ -58,7 +58,7 @@ public class BetterGUIHook extends AbstractHook {
 
         }
         player.openInventory(chestInventory);
-        Messages.SUCCESSFULLY_STORED_ITEMS_TO_CHEST.sendMessage(player);
+        Messages.SUCCESSFULLY_STORED_ITEMS_TO_CHEST.send(player);
     }
 
     @Override

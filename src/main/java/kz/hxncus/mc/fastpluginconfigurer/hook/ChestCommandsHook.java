@@ -3,7 +3,7 @@ package kz.hxncus.mc.fastpluginconfigurer.hook;
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
 import kz.hxncus.mc.fastpluginconfigurer.attribute.*;
 import kz.hxncus.mc.fastpluginconfigurer.config.ConfigItem;
-import kz.hxncus.mc.fastpluginconfigurer.util.Messages;
+import kz.hxncus.mc.fastpluginconfigurer.config.Messages;
 import kz.hxncus.mc.fastpluginconfigurer.util.VersionUtil;
 import me.filoghost.chestcommands.api.Icon;
 import me.filoghost.chestcommands.fcommons.collection.CaseInsensitiveString;
@@ -31,12 +31,12 @@ public class ChestCommandsHook extends AbstractHook {
         Block targetBlock = VersionUtil.getTargetBlock(player, 5);
         BlockState state = targetBlock == null ? null : targetBlock.getState();
         if (!(state instanceof Chest)) {
-            Messages.MUST_LOOKING_AT_DOUBLE_CHEST.sendMessage(player);
+            Messages.MUST_LOOKING_AT_DOUBLE_CHEST.send(player);
             return;
         }
         BaseMenu menu = MenuManager.getMenuByFileName(fileName);
         if (menu == null) {
-            Messages.MENU_NOT_FOUND.sendMessage(player, fileName);
+            Messages.MENU_NOT_FOUND.send(player, fileName);
         } else {
             storeConfigItemsInInventory(player, ((Chest) state).getInventory(), menu.getIcons());
         }
@@ -54,7 +54,7 @@ public class ChestCommandsHook extends AbstractHook {
             }
         }
         player.openInventory(chestInventory);
-        Messages.SUCCESSFULLY_STORED_ITEMS_TO_CHEST.sendMessage(player);
+        Messages.SUCCESSFULLY_STORED_ITEMS_TO_CHEST.send(player);
     }
 
     @Override

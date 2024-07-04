@@ -1,9 +1,9 @@
 package kz.hxncus.mc.fastpluginconfigurer.listener;
 
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
+import kz.hxncus.mc.fastpluginconfigurer.config.Messages;
+import kz.hxncus.mc.fastpluginconfigurer.inventory.InventoryManager;
 import kz.hxncus.mc.fastpluginconfigurer.inventory.marker.ItemMarker;
-import kz.hxncus.mc.fastpluginconfigurer.manager.InventoryManager;
-import kz.hxncus.mc.fastpluginconfigurer.util.Messages;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import org.bukkit.Bukkit;
@@ -35,7 +35,7 @@ public class DupeFixerListener implements Listener {
             for (ItemStack itemStack : inventory) {
                 if (itemMarker.isItemMarked(itemStack)) {
                     inventory.remove(itemStack);
-                    plugin.getLogger().info(Messages.PLAYER_LOGGED_WITH_CUSTOM_ITEM.getFormattedMessage(player.getName()));
+                    plugin.getLogger().info(Messages.PLAYER_LOGGED_WITH_CUSTOM_ITEM.toString(player.getName()));
                 }
             }
         }, 10L);
@@ -47,7 +47,7 @@ public class DupeFixerListener implements Listener {
         if (itemMarker.isItemMarked(item.getItemStack())) {
             event.setCancelled(true);
             item.remove();
-            plugin.getLogger().info(() -> Messages.SOMEONE_PICKED_CUSTOM_ITEM.getFormattedMessage(item.getLocation()));
+            plugin.getLogger().info(() -> Messages.SOMEONE_PICKED_CUSTOM_ITEM.toString(item.getLocation()));
         }
     }
 
@@ -57,7 +57,7 @@ public class DupeFixerListener implements Listener {
         if (itemMarker.isItemMarked(item.getItemStack())) {
             event.setCancelled(true);
             item.remove();
-            plugin.getLogger().info(() -> Messages.SOMEONE_DROPPED_CUSTOM_ITEM.getFormattedMessage(item.getLocation()));
+            plugin.getLogger().info(() -> Messages.SOMEONE_DROPPED_CUSTOM_ITEM.toString(item.getLocation()));
         }
     }
 }

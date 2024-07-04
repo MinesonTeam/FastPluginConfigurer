@@ -7,7 +7,7 @@ import fr.maxlego08.menu.api.pattern.Pattern;
 import kz.hxncus.mc.fastpluginconfigurer.FastPluginConfigurer;
 import kz.hxncus.mc.fastpluginconfigurer.attribute.*;
 import kz.hxncus.mc.fastpluginconfigurer.config.ConfigItem;
-import kz.hxncus.mc.fastpluginconfigurer.util.Messages;
+import kz.hxncus.mc.fastpluginconfigurer.config.Messages;
 import kz.hxncus.mc.fastpluginconfigurer.util.VersionUtil;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -17,12 +17,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.bukkit.Bukkit.getServer;
@@ -34,7 +29,11 @@ public class ZMenuHook extends AbstractHook {
 
     private <T> T getProvider(Class<T> classz) {
         RegisteredServiceProvider<T> provider = getServer().getServicesManager().getRegistration(classz);
-        return provider == null ? null : provider.getProvider() != null ? (T) provider.getProvider() : null;
+        if (provider == null) {
+            return null;
+        } else {
+            return provider.getProvider();
+        }
     }
 
     @Override
@@ -42,7 +41,7 @@ public class ZMenuHook extends AbstractHook {
         Block targetBlock = VersionUtil.getTargetBlock(player, 5);
         BlockState state = targetBlock == null ? null : targetBlock.getState();
         if (!(state instanceof Chest)) {
-            Messages.MUST_LOOKING_AT_DOUBLE_CHEST.sendMessage(player);
+            Messages.MUST_LOOKING_AT_DOUBLE_CHEST.send(player);
             return;
         }
         InventoryManager manager = getProvider(InventoryManager.class);
@@ -50,7 +49,7 @@ public class ZMenuHook extends AbstractHook {
         if (inventory.isPresent()) {
             storeConfigInInventory(player, ((Chest) state).getInventory(), (ZInventory) inventory.get());
         } else {
-            Messages.MENU_NOT_FOUND.sendMessage(player, fileName);
+            Messages.MENU_NOT_FOUND.send(player, fileName);
         }
     }
 
@@ -70,7 +69,7 @@ public class ZMenuHook extends AbstractHook {
             }
         }
         player.openInventory(chestInventory);
-        Messages.SUCCESSFULLY_STORED_ITEMS_TO_CHEST.sendMessage(player);
+        Messages.SUCCESSFULLY_STORED_ITEMS_TO_CHEST.send(player);
     }
 
     @Override
