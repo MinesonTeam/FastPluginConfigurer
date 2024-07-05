@@ -6,27 +6,25 @@
 
 > Developers who have contributed to the source code
 
-* [ImFoxter](https://github.com/ImFoxter)
-* [sxnsh1ness](https://github.com/sxnsh1ness)
-* [akirovitaliXD](https://github.com/akirovitaliXD)
+* [Hxncusik](https://github.com/Hxncusik)
 
 ### Early supporters
 
 > Users who bought the plugin during its beta (version 0.x) and decided to trust me and support the project while it was not yet finished.
 
-* Someone
+* Noone
 
 ### Idea givers
 
 > People who have given ideas to improve Oraxen
 
-* Someone
+* Noone
 
 ### Correctors
 
 > Persons who have identified spelling errors (including in the doc)
 
-* Someone
+* Noone
 
 ## I would like to join this list. How can I help the project?
 
