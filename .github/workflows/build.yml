@@ -1,0 +1,67 @@
+name: Java CI with Gradle
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3.0.0
+      - name: Set up JDK
+        uses: actions/setup-java@v3.0.0
+        with:
+          distribution: adopt
+          java-version: 21
+      - name: Make build.gradle executable
+        run: chmod +x gradlew
+      - name: Build FastPluginConfigurer
+        run: ./gradlew shadowJar
+      - name: Upload FastPluginConfigurer
+        uses: actions/upload-artifact@v3.0.0
+        with:
+          name: FastPluginConfigurer
+          path: "*/build/libs/*.jar"
+      - uses: dev-drprasad/delete-tag-and-release@v0.2.1
+        if: ${{ github.event_name == 'push' }}
+        with:
+          delete_release: true
+          tag_name: dev-build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Find git version
+        id: git-version
+        run: echo "id=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+      - name: Find correct JAR
+        if: ${{ github.event_name == 'push' }}
+        id: find-jar
+        run: |
+          output="$(find plugin/build/libs/ ! -name "*-javadoc.jar" ! -name "*-sources.jar" -type f -printf "%f\n")"
+          echo "::set-output name=jarname::$output"
+      - name: Release the build
+        if: ${{ github.event_name == 'push' }}
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: plugin/build/libs/${{ steps.find-jar.outputs.jarname }}
+          body: ${{ join(github.event.commits.*.message, '\n') }}
+          prerelease: true
+          name: Dev-build ${{ steps.git-version.outputs.id }}
+          tag: dev-build
+      - name: Upload to Modrinth
+        if: ${{ github.event_name == 'push' }}
+        uses: RubixDev/modrinth-upload@v1.0.0
+        with:
+          token: ${{ secrets.MODRINTH_TOKEN }}
+          file_path: plugin/build/libs/${{ steps.find-jar.outputs.jarname }}
+          name: Dev-build ${{ steps.git-version.outputs.id }}
+          version: ${{ steps.git-version.outputs.id }}
+          changelog: ${{ join(github.event.commits.*.message, '\n') }}
+          game_versions: 1.8, 1.9, 1.10, 1.11, 1.12, 1.13, 1.14, 1.15, 1.16, 1.17, 1.18, 1.19, 1.20, 1.21
+          release_type: beta
+          loaders: bukkit, paper, spigot, purpur
+          featured: false
+          project_id: 3FpD6Z1V
