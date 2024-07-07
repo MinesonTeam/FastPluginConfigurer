@@ -60,8 +60,13 @@ jobs:
           name: Dev-build ${{ steps.git-version.outputs.id }}
           version: ${{ steps.git-version.outputs.id }}
           changelog: ${{ join(github.event.commits.*.message, '\n') }}
-          game_versions: 1.8, 1.9, 1.10, 1.11, 1.12, 1.13, 1.14, 1.15, 1.16, 1.17, 1.18, 1.19, 1.20, 1.21
+          game_versions: 1.8..latest
           release_type: beta
-          loaders: bukkit, paper, spigot, purpur
+          loaders: |
+            bukkit
+            spigot
+            paper
+            purpur
+            folia
           featured: false
           project_id: 3FpD6Z1V
