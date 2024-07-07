@@ -13,6 +13,8 @@ jobs:
         with:
           distribution: adopt
           java-version: 21
+      - name: Make build.gradle executable
+        run: chmod +x gradlew
       - name: Build FastPluginConfigurer
         run: ./gradlew build
       - name: Upload FastPluginConfigurer
