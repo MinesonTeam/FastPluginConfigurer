@@ -17,8 +17,10 @@ jobs:
         with:
           distribution: adopt
           java-version: 21
+      - name: Make build.gradle executable
+        run: chmod +x gradlew
       - name: Build FastPluginConfigurer
-        run: ./gradlew build
+        run: ./gradlew shadowJar
       - name: Upload FastPluginConfigurer
         uses: actions/upload-artifact@v3.0.0
         with:
