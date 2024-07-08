@@ -42,7 +42,7 @@ jobs:
         if: ${{ github.event_name == 'push' }}
         id: find-jar
         run: |
-          output="$(find plugin/build/libs/ ! -name "*-javadoc.jar" ! -name "*-sources.jar" -type f -printf "%f\n")"
+          output="$(find build/libs/ ! -name "*-javadoc.jar" ! -name "*-sources.jar" -type f -printf "%f\n")"
           echo "::set-output name=jarname::$output"
       - name: Release the build
         if: ${{ github.event_name == 'push' }}
