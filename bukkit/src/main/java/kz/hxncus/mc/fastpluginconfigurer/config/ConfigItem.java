@@ -12,6 +12,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.*;
+import org.bukkit.material.MaterialData;
 import org.bukkit.potion.PotionEffect;
 
 import java.util.Collections;
@@ -26,8 +27,8 @@ public class ConfigItem {
     private final Material material;
     private final int amount;
     private final int index;
-    private int durability;
-    private byte data;
+    private final int durability;
+    private final byte data;
     private Color RGB;
     private DyeColor dyeColor;
     private EntityType entityType;
@@ -41,16 +42,20 @@ public class ConfigItem {
         this.material = item.getType();
         this.amount = item.getAmount();
         this.index = index;
-        this.data = item.getData() == null ? null : item.getData().getData();
+        MaterialData materialData = item.getData();
+        this.data = materialData == null ? null : materialData.getData();
+        this.durability = item.getDurability();
         ItemMeta itemMeta = item.getItemMeta();
-        if (itemMeta == null) {
-            return;
+        if (itemMeta != null) {
+            initializeMeta(itemMeta);
         }
+    }
+
+    private void initializeMeta(ItemMeta itemMeta) {
         this.name = itemMeta.hasDisplayName() ? itemMeta.getDisplayName() : null;
         this.lore = itemMeta.getLore();
         this.enchantments = itemMeta.getEnchants();
         this.itemFlags = itemMeta.getItemFlags();
-        this.durability = item.getDurability();
         if (itemMeta instanceof LeatherArmorMeta) {
             this.RGB = ((LeatherArmorMeta) itemMeta).getColor();
         }
