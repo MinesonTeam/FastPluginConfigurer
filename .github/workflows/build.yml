@@ -20,7 +20,7 @@ jobs:
       - name: Make build.gradle executable
         run: chmod +x gradlew
       - name: Build FastPluginConfigurer
-        run: ./gradlew shadowJar
+        run: ./gradlew build
       - name: Upload FastPluginConfigurer
         uses: actions/upload-artifact@v3.0.0
         with:
