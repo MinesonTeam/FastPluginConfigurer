@@ -48,7 +48,7 @@ jobs:
         if: ${{ github.event_name == 'push' }}
         uses: ncipollo/release-action@v1
         with:
-          artifacts: plugin/build/libs/${{ steps.find-jar.outputs.jarname }}
+          artifacts: build/libs/${{ steps.find-jar.outputs.jarname }}
           body: ${{ join(github.event.commits.*.message, '\n') }}
           prerelease: true
           name: Dev-build ${{ steps.git-version.outputs.id }}
@@ -58,7 +58,7 @@ jobs:
         uses: RubixDev/modrinth-upload@v1.0.0
         with:
           token: ${{ secrets.MODRINTH_TOKEN }}
-          file_path: plugin/build/libs/${{ steps.find-jar.outputs.jarname }}
+          file_path: build/libs/${{ steps.find-jar.outputs.jarname }}
           name: Dev-build ${{ steps.git-version.outputs.id }}
           version: ${{ steps.git-version.outputs.id }}
           changelog: ${{ join(github.event.commits.*.message, '\n') }}
