@@ -8,6 +8,10 @@ plugins {
     id("io.github.goooler.shadow") version "8.1.7"
 }
 
+val zmenu = "1.0.3.1"
+val bstats = "3.0.2"
+val junit = "5.10.2"
+val lombok = "1.18.30"
 val projectVersion: String by project
 group = "kz.hxncus.mc"
 version = property("projectVersion") as String
@@ -30,17 +34,17 @@ allprojects {
     }
 
     dependencies {
-        compileOnly(rootProject.libs.zmenu)
+        compileOnly("com.github.Maxlego08:zMenu-API:$zmenu")
         compileOnly(fileTree("../libs/compileOnly/"))
-        compileOnly("org.projectlombok:lombok:1.18.30")
+        compileOnly("org.projectlombok:lombok:$lombok")
 
-        implementation("org.bstats:bstats-bukkit:3.0.2")
+        implementation("org.bstats:bstats-bukkit:$bstats")
         implementation(fileTree("../libs/implementation/"))
 
-        testImplementation(rootProject.libs.bundles.junit)
-        annotationProcessor("org.projectlombok:lombok:1.18.30")
-        testCompileOnly("org.projectlombok:lombok:1.18.30")
-        testAnnotationProcessor("org.projectlombok:lombok:1.18.30")
+        annotationProcessor("org.projectlombok:lombok:$lombok")
+        testAnnotationProcessor("org.projectlombok:lombok:$lombok")
+        testCompileOnly("org.projectlombok:lombok:$lombok")
+        testImplementation("org.junit.jupiter:junit-jupiter-api:$junit")
     }
 }
 
