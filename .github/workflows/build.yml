@@ -32,7 +32,7 @@ jobs:
           delete_release: true
           tag_name: dev-build
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Find git version
         id: git-version
         run: echo "id=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT

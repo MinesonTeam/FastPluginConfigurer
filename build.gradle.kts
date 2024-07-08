@@ -98,7 +98,6 @@ tasks {
         archiveFileName.set("FastPluginConfigurer-${projectVersion}.jar")
         archiveClassifier.set("")
     }
-
     compileJava.get().dependsOn(clean)
     build.get().dependsOn(shadowJar)
 }

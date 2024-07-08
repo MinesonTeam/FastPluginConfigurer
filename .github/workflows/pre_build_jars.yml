@@ -28,4 +28,4 @@ jobs:
     - name: Make build.gradle executable
       run: chmod +x gradlew
     - name: Build jar with Java ${{ matrix.java-version }}
-      run: ./gradlew shadowJar
+      run: ./gradlew build
