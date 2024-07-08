@@ -65,6 +65,6 @@ jobs:
           changelog: ${{ join(github.event.commits.*.message, '\n') }}
           game_versions: 1.8..latest
           release_type: beta
-          loaders: bukkit, spigot, paper, purpur, folia
+          loaders: bukkit,spigot,paper,purpur,folia
           featured: false
           project_id: 3FpD6Z1V
